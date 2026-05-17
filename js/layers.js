@@ -29,10 +29,10 @@ addLayer("I", {
         content: [ "main-display",["infobox",'About'],["infobox",'Basic1'],["infobox",'Lv'],["infobox",'Skill'],
         ["infobox",'Timewall'],["infobox",'Skill2'],["infobox",'Shop'],["infobox",'Item1'],["infobox",'Item2'],
         ["infobox",'Lv9'],["infobox",'Item3'],["infobox",'HPLoss'],["infobox",'Item4'],["infobox",'Upg1'],
-        ["infobox",'TWskill'],]
+        ["infobox",'TWskill'],["infobox",'Poison'],["infobox",'Poison2'],["infobox",'RanBox'],]
     },
     "Timewall": {
-        content: [ "main-display",["infobox",'2'],],
+        content: [ "main-display",["infobox",'2'],["infobox",'3'],["infobox",'4'],["infobox",'5'],],
         unlocked(){return player.m.points.gte(15)}
     },},
     infoboxes: {
@@ -110,11 +110,41 @@ addLayer("I", {
         body() { return "在关卡15，你将首次见到有特殊技能的时间墙！时间墙的具体特殊技能请至'Timewall'页面查看。同时，本游戏的基础玩法也已经完全地呈现给你了，在关卡15后你便需要综合运用游戏内的机制了" },
         unlocked(){return player.m.points.gte(15)}
     },
+    Poison: {
+        title: "关于毒气",
+        body() { return "毒气在关卡16首次出现。这一机制会让你和时间墙（如果有的话）每隔一段时间增加1回合的剧毒效果，而剧毒效果会让你每回合减少50血量+10%总血量，因此这也需要你速战速决！" },
+        unlocked(){return player.m.points.gte(16)}
+    },
+    Poison2: {
+        title: "关于关卡效果表示",
+        body() { return "在之前，你已经看到了毒气与血量流失这两个效果在每次出现时后面都有大串描述，而所有描述加起来会导致关卡目标很长，怎么办呢？注意到每个效果都只有一个变量，因此每个效果就可以表示为“效果名称(x)”的格式了！从关卡17开始，这个格式将会被正式启用。" },
+        unlocked(){return player.m.points.gte(16)}
+    },
+    RanBox: {
+        title: "关于天降礼盒",
+        body() { return "天降礼盒在关卡21首次出现。其会每隔一段时间给你一个免费礼盒，在任意时刻都可以使用。但需要注意，免费礼盒出现负面事件的概率为50%！" },
+        unlocked(){return player.m.points.gte(21)}
+    },
     //TWskill
     2: {
         title: "Level 15 (ID:2)",
-        body() { return "1.每回合有50%概率恢复50血量<br>1.每回合有20%概率使用暴击技能，造成5倍伤害<br>注：ID相同的时间墙，技能相同" },
+        body() { return "1.每回合有50%概率恢复50血量<br>1.每回合有20%概率使用暴击技能，造成5倍伤害<br>注：ID相同的时间墙，技能相同；此处没列举的关卡代表无任何特殊技能" },
         unlocked(){return player.m.points.gte(15)}
+    },
+    3: {
+        title: "Level 18 (ID:3)",
+        body() { return "每回合有25%概率给你施加2回合的剧毒效果" },
+        unlocked(){return player.m.points.gte(18)}
+    },
+    4: {
+        title: "Level 20 (ID:4)",
+        body() { return "1.每回合有50%概率使用超级点击技能，获得5倍的普通点数<br>2.每回合有40%概率使用蜂蜜，清除剧毒效果<br>3.当你的普通点数小于时间墙的时，你将直接被秒杀" },
+        unlocked(){return player.m.points.gte(20)}
+    },
+    5: {
+        title: "Level 25 (ID:5)",
+        body() { return "1.每回合有20%概率使用偷袭技能，造成最大血量10%的伤害<br>2.每3回合清除你的技能点"},
+        unlocked(){return player.m.points.gte(25)}
     },
 }
 })
@@ -144,9 +174,11 @@ addLayer("m", {
         currentStrPot:n(0),
         currentHpPot:n(0),
         currentPoiPot:n(0),
+        currentHoney:n(0),
 
         currentStrBuff:n(0),
         currentHpBuff:n(0),
+        currentPoiBuff:n(0),
 
         TWhp:n(0),
         TWbp:n(0),
@@ -154,6 +186,12 @@ addLayer("m", {
         TWatk:n(0),
 
         TWPoison:n(0),
+
+        allTimer:n(0),
+        TimerforPoison:n(0),
+
+        TimerforRanBox:n(0),
+        FreeRanBox:n(0),
 
         TWtext:'',
     }},
@@ -179,6 +217,19 @@ addLayer("m", {
     update(diff){
         player.devSpeed = n(1-getClickableState('m',52))
         if(player.m.TimeToNext.gt(0)) player.m.TimeToNext=player.m.TimeToNext.sub(diff).max(0)
+        if(player.m.currentLevel.gt(0)&&!tmp.m.LevelSucceed&&!tmp.m.LevelFailed){player.m.allTimer=player.m.allTimer.add(diff)
+             player.m.TimerforPoison=player.m.TimerforPoison.add(diff)
+            player.m.TimerforRanBox=player.m.TimerforRanBox.add(diff)
+            if(player.m.TimerforPoison.gte(tmp.m.goal[player.m.currentLevel.toNumber()].PoiTime)&&tmp.m.goal[player.m.currentLevel.toNumber()].PoiTime!==undefined&&player.devSpeed.gt(0)){
+                player.m.TimerforPoison=player.m.TimerforPoison.sub(tmp.m.goal[player.m.currentLevel.toNumber()].PoiTime)
+                player.m.currentPoiBuff=player.m.currentPoiBuff.add(1)
+                if(player.m.TWhp.gt(0)) player.m.TWPoison=player.m.TWPoison.add(1)
+            }
+        if(player.m.TimerforRanBox.gte(tmp.m.goal[player.m.currentLevel.toNumber()].RanBox)&&tmp.m.goal[player.m.currentLevel.toNumber()].RanBox!==undefined&&player.devSpeed.gt(0)){
+                player.m.TimerforRanBox=player.m.TimerforRanBox.sub(tmp.m.goal[player.m.currentLevel.toNumber()].RanBox)
+                player.m.FreeRanBox=player.m.FreeRanBox.add(1)
+            }
+        }
         if(tmp.m.goal[player.m.currentLevel.toNumber()].DPS!==undefined&&tmp.m.ButtonCanBeSeen) player.m.currentHP=player.m.currentHP.sub(tmp.m.HPActualLoss.times(diff))
         player.m.currentHP=player.m.currentHP.min(tmp.p.maxHP)
     },
@@ -260,11 +311,16 @@ addLayer("m", {
             player.m.currentStrPot = getBuyableAmount('p',13)
             player.m.currentHpPot = getBuyableAmount('p',14)
             player.m.currentPoiPot = getBuyableAmount('p',21)
+            player.m.currentHoney = getBuyableAmount('p',22)
             if(tmp.m.goal[player.m.currentLevel.toNumber()].TimewallId!==undefined){
                 player.m.TWhp = tmp.m.goal[player.m.currentLevel.toNumber()].TimewallHP
                 player.m.TWatk = tmp.m.goal[player.m.currentLevel.toNumber()].TimewallATK
                 player.m.TWbpPerRound = tmp.m.goal[player.m.currentLevel.toNumber()].TimewallBP
             }
+            player.m.allTimer=n(0)
+            player.m.TimerforPoison=n(0)
+            player.m.TimerforRanBox=n(0)
+            player.m.FreeRanBox=n(0)
         },
     },
     //In-level Basic contents(id=0)
@@ -320,6 +376,17 @@ addLayer("m", {
         },
         onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK)
             AnyOperation()
+        },
+    },
+    46: {
+        title() {return "使用免费礼盒"},
+        display() {return "剩余免费礼盒："+format(player.m.FreeRanBox,0)},
+        unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(0)&&tmp.m.goal[player.m.currentLevel.toNumber()].RanBox!==undefined},
+        canClick() {a=player.devSpeed.gt(0)&&player.m.FreeRanBox.gte(1)
+            return a
+        },
+        onClick() {player.m.FreeRanBox=player.m.FreeRanBox.sub(1)
+            RanBox(0.5)
         },
     },
     //Skill(id=1)
@@ -409,8 +476,8 @@ addLayer("m", {
         },
     },
     75: {
-        title() {return "剧毒药水("+format(player.m.currentHpPot,0)+')'},
-        display() {return '使用一次剧毒药水，使敌人获得5回合的中毒buff<br>仅当敌人存活时可使用'},
+        title() {return "剧毒药水("+format(player.m.currentPoiPot,0)+')'},
+        display() {return '使用一次剧毒药水，使敌人获得5回合的剧毒buff<br>仅当敌人存活时可使用'},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(2)&&player.m.points.gte(13)},
         canClick() {a= tmp.m.ButtonCanClick&&player.m.currentPoiPot.gte(1)&&player.m.TWhp.gt(0)
             return a
@@ -421,6 +488,18 @@ addLayer("m", {
         },
     },
     76: {
+        title() {return "蜂蜜("+format(player.m.currentHoney,0)+')'},
+        display() {return '使用一次蜂蜜，清除你的剧毒buff<br>仅当你拥有剧毒buff时可使用'},
+        unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(2)&&player.m.points.gte(17)},
+        canClick() {a= tmp.m.ButtonCanClick&&player.m.currentHoney.gte(1)&&player.m.currentPoiBuff.gt(0)
+            return a
+        },
+        onClick() {player.m.currentHoney = player.m.currentHoney.sub(1)
+            player.m.currentPoiBuff=n(0)
+            AnyOperation()
+        },
+    },
+    77: {
         title() {return "退出道具界面"},
         display() {return "回到普通界面"},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(2)},
@@ -459,6 +538,7 @@ addLayer("m", {
             player.m.TWtext=''
             player.m.currentStrBuff=n(0)
             player.m.currentHpBuff=n(0)
+            player.m.currentPoiBuff=n(0)
             player.m.TWPoison=n(0)
         },
     },
@@ -478,26 +558,39 @@ addLayer("m", {
     goaldescription(){a=['获得900普通点数','在6次操作内获得450普通点数','在2次操作内获得600普通点数','在6次操作内获得900普通点数','击败时间墙并获得1500普通点数',//1-5
         '在5次操作内击败时间墙且获得1100普通点数','在1次操作内获得850普通点数','在7次操作内获得1400普通点数','在3次操作内击败时间墙并获得600普通点数','在16次操作内击败时间墙并获得1250普通点数',//6-10
         '在血量流失的状态下获得2000普通点数（每秒流失10血量）','在血量流失的状态下5次操作内获得2000普通点数（每秒流失30血量）','在血量流失的状态下不使用技能5次操作内击败时间墙并获得1300普通点数（每秒流失15血量）',//11-13
-        '在血量流失的状态下2次操作内获得1000普通点数（每秒流失150血量）','击败时间墙并获得1500普通点数',
+        '在血量流失的状态下2次操作内获得1000普通点数（每秒流失150血量）','击败时间墙并获得1500普通点数','在毒气中获得3500普通点数（每3秒增加1回合剧毒buff）',//14-16
+        '在毒气(0.1)中不使用技能3次操作内击败时间墙并获得850普通点数','在血量流失(45)的情况下不使用技能击败时间墙并获得600普通点数','在血量流失(35)与毒气(2)的情况下10次操作内击败时间墙并获得1000普通点数',//17-19
+        '在血量流失(30)与毒气(5)的情况下击败时间墙并获得2100普通点数','在天降礼盒(5)的情况下5次操作内获得3600普通点数','在天降礼盒(3)的情况下1次操作内获得3000普通点数',//20-22
+        '在血量流失(50)与天降礼盒(1)的情况下不使用技能1次操作内获得300普通点数','在血量流失(25)与天降礼盒(1)的情况下15次操作内获得5000普通点数','在血量流失(50)与天降礼盒(2)的情况下10次操作内击败时间墙并获得1500普通点数',//23-25
     ]
         return a
     },
     goal:{0:{},
-        1:{BasicPoint:n(900),},
-        2:{BasicPoint:n(450),RoundLimit:n(6),},
-        3:{BasicPoint:n(600),RoundLimit:n(2),},
-        4:{BasicPoint:n(900),RoundLimit:n(6),},
-        5:{BasicPoint:n(1500),TimewallId:n(1),TimewallHP:n(120),TimewallATK:n(5),TimewallBP:n(100),},
-        6:{BasicPoint:n(1100),RoundLimit:n(5),TimewallId:n(1),TimewallHP:n(70),TimewallATK:n(20),TimewallBP:n(400),},
-        7:{BasicPoint:n(850),RoundLimit:n(1),},
-        8:{BasicPoint:n(1400),RoundLimit:n(7),},
-        9:{BasicPoint:n(600),RoundLimit:n(3),TimewallId:n(1),TimewallHP:n(140),TimewallATK:n(20),TimewallBP:n(600),},
-        10:{BasicPoint:n(1250),RoundLimit:n(16),TimewallId:n(1),TimewallHP:n(378),TimewallATK:n(20),TimewallBP:n(200),},
-        11:{BasicPoint:n(2000),DPS:n(10),},
-        12:{BasicPoint:n(2000),RoundLimit:n(5),DPS:n(30),},
-        13:{BasicPoint:n(1250),RoundLimit:n(5),DPS:n(15),noSkill:true,TimewallId:n(1),TimewallHP:n(180),TimewallATK:n(10),TimewallBP:n(500),},
-        14:{BasicPoint:n(1000),RoundLimit:n(2),DPS:n(150),},
-        15:{BasicPoint:n(1500),TimewallId:n(2),TimewallHP:n(850),TimewallATK:n(15),TimewallBP:n(250),},
+        1:{BasicPoint:n(900),Difficulty:n(1.0),},
+        2:{BasicPoint:n(450),RoundLimit:n(6),Difficulty:n(1.1),},
+        3:{BasicPoint:n(600),RoundLimit:n(2),Difficulty:n(1.1),},
+        4:{BasicPoint:n(900),RoundLimit:n(6),Difficulty:n(1.2),},
+        5:{BasicPoint:n(1500),TimewallId:n(1),TimewallHP:n(120),TimewallATK:n(5),TimewallBP:n(100),Difficulty:n(1.4),},
+        6:{BasicPoint:n(1100),RoundLimit:n(5),TimewallId:n(1),TimewallHP:n(70),TimewallATK:n(20),TimewallBP:n(400),Difficulty:n(1.6),},
+        7:{BasicPoint:n(850),RoundLimit:n(1),Difficulty:n(1.8),},
+        8:{BasicPoint:n(1400),RoundLimit:n(7),Difficulty:n(2.0),},
+        9:{BasicPoint:n(600),RoundLimit:n(3),TimewallId:n(1),TimewallHP:n(140),TimewallATK:n(20),TimewallBP:n(600),Difficulty:n(2.1),},
+        10:{BasicPoint:n(1250),RoundLimit:n(16),TimewallId:n(1),TimewallHP:n(378),TimewallATK:n(20),TimewallBP:n(200),Difficulty:n(2.5),},
+        11:{BasicPoint:n(2000),DPS:n(10),Difficulty:n(1.9),},
+        12:{BasicPoint:n(2000),RoundLimit:n(5),DPS:n(30),Difficulty:n(2.1),},
+        13:{BasicPoint:n(1250),RoundLimit:n(5),DPS:n(15),noSkill:true,TimewallId:n(1),TimewallHP:n(180),TimewallATK:n(10),TimewallBP:n(500),Difficulty:n(2.4),},
+        14:{BasicPoint:n(1000),RoundLimit:n(2),DPS:n(150),Difficulty:n(2.6),},
+        15:{BasicPoint:n(1500),TimewallId:n(2),TimewallHP:n(850),TimewallATK:n(15),TimewallBP:n(250),Difficulty:n(3.0),},
+        16:{BasicPoint:n(3500),PoiTime:n(3),Difficulty:n(2.5),},
+        17:{BasicPoint:n(850),RoundLimit:n(3),PoiTime:n(0.1),noSkill:true,TimewallId:n(1),TimewallHP:n(140),TimewallATK:n(10),TimewallBP:n(750),Difficulty:n(3.2),},
+        18:{BasicPoint:n(600),DPS:n(45),noSkill:true,TimewallId:n(3),TimewallHP:n(1000),TimewallATK:n(0),TimewallBP:n(0),Difficulty:n(4.2),},
+        19:{BasicPoint:n(1000),RoundLimit:n(10),PoiTime:n(2),DPS:n(35),TimewallId:n(1),TimewallHP:n(850),TimewallATK:n(20),TimewallBP:n(150),Difficulty:n(3.8),},
+        20:{BasicPoint:n(2100),PoiTime:n(5),DPS:n(30),TimewallId:n(4),TimewallHP:n(1145),TimewallATK:n(20),TimewallBP:n(60),Difficulty:n(5.1),},
+        21:{BasicPoint:n(3600),RoundLimit:n(5),RanBox:n(5),Difficulty:n(2.5),},
+        22:{BasicPoint:n(3000),RoundLimit:n(1),RanBox:n(3),Difficulty:n(2.8),},
+        23:{BasicPoint:n(300),RoundLimit:n(1),RanBox:n(1),DPS:n(50),noSkill:true,Difficulty:n(3.1),},
+        24:{BasicPoint:n(5000),RoundLimit:n(15),RanBox:n(1),DPS:n(25),Difficulty:n(3.6),},
+        25:{BasicPoint:n(1500),RoundLimit:n(10),RanBox:n(2),DPS:n(50),TimewallId:n(5),TimewallHP:n(1200),TimewallATK:n(30),TimewallBP:n(200),Difficulty:n(4.3),},
     },
     Leveltext(){a='<br>当前选择关卡：Level '+format(player.m.selectedLevel,0)
         a=a+"<br>目标："+tmp.m.goaldescription[player.m.selectedLevel.sub(1).toNumber()]
@@ -509,6 +602,7 @@ addLayer("m", {
         a=a+'<br>玩家信息：<br>普通点数：'+format(player.m.BasicPoint)
         a=a+'<br>血量：'+format(player.m.currentHP)+'/'+format(tmp.p.maxHP)
         if(player.m.currentHpBuff.gt(0)) a=a+'(生命恢复Buff：'+format(player.m.currentHpBuff,0)+')'
+        if(player.m.currentPoiBuff.gt(0)) a=a+'(剧毒Buff：'+format(player.m.currentPoiBuff,0)+')'
         if(tmp.m.goal[player.m.currentLevel.toNumber()].DPS!==undefined&&tmp.m.goal[player.m.currentLevel.toNumber()].DPS.neq(0)) a=a+'(血量流失：-'+format(tmp.m.HPActualLoss)+'/s)'
         a=a+'<br>技能点：'+format(player.m.currentSP)+'/'+format(tmp.p.maxSP)
         a=a+'<br>攻击力：'+format(tmp.m.CurrentATK)
@@ -519,12 +613,14 @@ addLayer("m", {
         a=a+'<br>时间墙信息：<br>普通点数：'+format(player.m.TWbp)
         a=a+'<br>普通点数增加量：'+format(player.m.TWbpPerRound)
         a=a+'<br>血量：'+format(player.m.TWhp)+'/'+format(tmp.m.goal[player.m.currentLevel.toNumber()].TimewallHP)
-        if(player.m.TWPoison.gt(0)) a=a+'(中毒buff：'+format(player.m.TWPoison,0)+')'
+        if(player.m.TWPoison.gt(0)) a=a+'(剧毒buff：'+format(player.m.TWPoison,0)+')'
         a=a+'<br>攻击力：'+format(player.m.TWatk)+'<br>'
         }
 
+        a=a+'<br>关卡难度：'+format(tmp.m.goal[player.m.currentLevel.toNumber()].Difficulty,1)+'<br>'
         a=a+'当前已操作次数：'+format(player.m.RoundUsed,0)
         if(tmp.m.goal[player.m.currentLevel.toNumber()].RoundLimit!==undefined) a=a+'/'+tmp.m.goal[player.m.currentLevel.toNumber()].RoundLimit
+        a=a+'<br>关卡进行时间：'+format(player.m.allTimer,3)+'s'
         if(!tmp.m.LevelSucceed) a=a+'<br>操作剩余冷却时间：'+format(player.m.TimeToNext,3)+'s/'+format(0.5,3)+'s<br>'
         if(tmp.m.LevelFailed&&!tmp.m.LevelSucceed) a=a+'<br>关卡失败了！再接再厉，继续努力吧！'
         if(tmp.m.LevelSucceed) {a=a+'<br>关卡胜利了！基于你的普通点数，你将获得'+format(tmp.m.LevelReward)+'点数'
@@ -664,7 +760,7 @@ addLayer("p", {
     },
     13: {
         title() {return "力量药水("+format(getBuyableAmount(this.layer,this.id),0)+')'},
-        cost(x){a= n(2).pow(x).times(300)
+        cost(x){a= n(3).pow(x).times(300)
             return a
         },
         display() {a= "效果：使用后获得5回合的力量buff，攻击力变为原来的3倍"
@@ -679,7 +775,7 @@ addLayer("p", {
     },
     14: {
         title() {return "治疗药水("+format(getBuyableAmount(this.layer,this.id),0)+')'},
-        cost(x){a= n(2).pow(x).times(300)
+        cost(x){a= n(3).pow(x).times(300)
             return a
         },
         display() {a= "效果：使用后获得5回合的生命恢复buff，每回合恢复20%最大血量，无法超过上限"
@@ -694,14 +790,29 @@ addLayer("p", {
     },
     21: {
         title() {return "剧毒药水("+format(getBuyableAmount(this.layer,this.id),0)+')'},
-        cost(x){a= n(2).pow(x).times(300)
+        cost(x){a= n(3).pow(x).times(300)
             return a
         },
-        display() {a= "效果：使用后使敌人获得5回合的中毒buff，每回合受到你的攻击力x2的伤害"
+        display() {a= "效果：使用后使敌人获得5回合的剧毒buff，每回合受到你的攻击力x2的伤害"
             a=a+'<br>花费：'+format(this.cost())+'点数'
             return a
         },
         unlocked() {return player.m.points.gte(13)},
+        canAfford(){return player.points.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.points=player.points.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        }
+    },
+    22: {
+        title() {return "蜂蜜("+format(getBuyableAmount(this.layer,this.id),0)+')'},
+        cost(x){a= n(2).pow(x).times(250)
+            return a
+        },
+        display() {a= "效果：使用后清除你的剧毒buff"
+            a=a+'<br>花费：'+format(this.cost())+'点数'
+            return a
+        },
+        unlocked() {return player.m.points.gte(17)},
         canAfford(){return player.points.gte(this.cost())&&player.m.currentLevel.eq(0)},
         buy(){player.points=player.points.sub(this.cost())
             addBuyables(this.layer,this.id,n(1))
@@ -721,7 +832,24 @@ addLayer("p", {
         canAfford(){return player.p.DefensePoint.gte(this.cost())&&player.m.currentLevel.eq(0)},
         buy(){player.p.DefensePoint=player.p.DefensePoint.sub(this.cost())
             addBuyables(this.layer,this.id,n(1))
-        }
+        },
+        purchaseLimit:n(75),
+    },
+    32: {
+        title() {return "抗剧毒("+format(getBuyableAmount(this.layer,this.id),0)+'/50)'},
+        cost(x){a= x.add(1).times(2000)
+            return a
+        },
+        display() {a= "每次升级使我方剧毒buff造成的伤害-1%<br>当前：-"+format(getBuyableAmount(this.layer,this.id))+'%'
+            a=a+'<br>花费：'+format(this.cost())+'防御点数'
+            return a
+        },
+        unlocked() {return player.m.points.gte(16)},
+        canAfford(){return player.p.DefensePoint.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.p.DefensePoint=player.p.DefensePoint.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        },
+        purchaseLimit:n(50),
     },
     },
     Playertext(){a='玩家信息：<br>等级：'+format(player.p.points,0)

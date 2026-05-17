@@ -13,13 +13,15 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.1.0",
-	name: "Basic",
+	num: "0.2.0",
+	name: "Level 25",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h3>v0.1.0</h3><br>
-		- 增加基础功能，完成前15关`
+	<h3>v0.1.0 2026/5/4</h3><br>
+		- 增加基础功能，完成前15关<br>
+	<h3>v0.2.0 2026/5/17</h3><br>
+		- 完成前25关，增加了难度系统<br>`
 
 let winText = `恭喜！你 >暂时< 通关了！`
 
@@ -84,6 +86,7 @@ function n(num){
 
 function AnyOperation(){
 	player.m.TWtext=''
+	player.m.RoundUsed = player.m.RoundUsed.add(1)
 	if(player.m.TWPoison.gt(0)){player.m.TWPoison=player.m.TWPoison.sub(1).max(0)
 			player.m.TWhp=player.m.TWhp.sub(tmp.m.CurrentATK.times(2))
 		}
@@ -97,21 +100,23 @@ function AnyOperation(){
 		player.m.BasicPoint=player.m.BasicPoint.add(player.m.TWbp.div(2))
 		player.m.TWbp=n(0)
 	}
-	player.m.RoundUsed = player.m.RoundUsed.add(1)
 	if(getClickableState('m',41)>0) setClickableState('m',41,getClickableState('m',41)-1)
 	player.m.currentStrBuff=player.m.currentStrBuff.add(-1).max(0)
 	if(player.m.currentHpBuff.gt(0)) {player.m.currentHpBuff=player.m.currentHpBuff.add(-1).max(0)
 		player.m.currentHP=player.m.currentHP.add(tmp.p.maxHP.times(0.2))
 	}
+	if(player.m.currentPoiBuff.gt(0)) {player.m.currentPoiBuff=player.m.currentPoiBuff.add(-1).max(0)
+		player.m.currentHP=player.m.currentHP.sub(tmp.p.maxHP.times(getBuyableAmount('p',32).times(-0.001).add(0.1)).add(getBuyableAmount('p',32).times(-0.01).add(1).times(50)))
+	}
     player.m.TimeToNext = n(0.5)
 	player.m.ButtonShowId = n(0)
 }
 
-function RanBox(Advance = false) {
+function RanBox(NormChance = 0.8) {
 	mult=n(1)
-	if(Advance = false){a=Math.random()
-		if(a>0.8) mult=mult.times(-1)
-	}
+	a=Math.random()
+	if(a>NormChance) mult=mult.times(-1)
+	
 	b=n(Math.random()).times(5)
 	if(b.floor().eq(0)) player.m.currentHP=player.m.currentHP.add(mult.times(100))
 	if(b.floor().eq(1)) player.m.currentSP=player.m.currentSP.add(mult.times(20))
@@ -125,6 +130,23 @@ function TWskill(id){
 		if(Math.random()>0.5) {player.m.TWhp=player.m.TWhp.add(50)
             player.m.TWtext=player.m.TWtext+'时间墙回复了50血量！<br>'}
 		if(Math.random()>0.8) {player.m.currentHP=player.m.currentHP.sub(player.m.TWatk.times(4))
-            player.m.TWtext=player.m.TWtext+'时间墙使用暴击技能，总共对你造成了5倍伤害！<br>'}
+            player.m.TWtext=player.m.TWtext+'时间墙使用了暴击技能，总共对你造成了5倍伤害！<br>'}
+		}
+		if(id.eq(3)) {if(Math.random()>0.75){player.m.currentPoiBuff=player.m.currentPoiBuff.add(2)
+			player.m.TWtext=player.m.TWtext+'时间墙给你施加了2回合的剧毒效果！<br>'}
+		}
+		if(id.eq(4)) {
+		if(Math.random()>0.5) {player.m.TWbp=player.m.TWbp.add(240)
+            player.m.TWtext=player.m.TWtext+'时间墙使用了超级点击技能，总共获得了5倍的普通点数！<br>'}
+		if(Math.random()>0.6) {player.m.TWPoison=n(0)
+            player.m.TWtext=player.m.TWtext+'时间墙使用了蜂蜜，清除了自身的剧毒效果！<br>'}
+		if(player.m.BasicPoint.lt(player.m.TWbp)) {player.m.currentHP=n(-9999)
+			player.m.TWtext=player.m.TWtext+'你的普通点数被时间墙压制了，时间墙将你秒杀了！<br>'}
+		}
+		if(id.eq(5)) {
+		if(Math.random()>0.8) {player.m.currentHP=player.m.currentHP.sub(tmp.p.maxHP.times(0.1))
+            player.m.TWtext=player.m.TWtext+'时间墙使用了偷袭技能，对你造成了最大血量10%的伤害！<br>'}
+		if(player.m.RoundUsed.div(3).floor().eq(player.m.RoundUsed.div(3))) {player.m.currentSP=n(0)
+            player.m.TWtext=player.m.TWtext+'时间墙清除了你的技能点！<br>'}
 		}
     }
