@@ -50,6 +50,7 @@ function updateParticles(diff) {
 		particle.time -= diff;
         particle.fadeInTimer -= diff;
 		if (particle["time"] < 0) {
+            if (particle.onDelete) run(particle.onDelete, particle) //new add
 			Vue.delete(particles, p); 
             
 		}

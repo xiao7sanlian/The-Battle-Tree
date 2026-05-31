@@ -13,15 +13,18 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.2.0",
-	name: "Level 25",
+	num: "1.0.0",
+	name: "Level 35",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
 	<h3>v0.1.0 2026/5/4</h3><br>
 		- 增加基础功能，完成前15关<br>
 	<h3>v0.2.0 2026/5/17</h3><br>
-		- 完成前25关，增加了难度系统<br>`
+		- 完成前25关，增加了难度系统<br>
+	<h3>v1.0.0 2026/5/24~2026/5/31</h3><br>
+		- 完成前35关，增加了技能升级与里程碑<br>
+		- 内置vue.js<br>`
 
 let winText = `恭喜！你 >暂时< 通关了！`
 
@@ -127,26 +130,95 @@ function RanBox(NormChance = 0.8) {
 
 function TWskill(id){
         if(id.eq(2)) {
-		if(Math.random()>0.5) {player.m.TWhp=player.m.TWhp.add(50)
-            player.m.TWtext=player.m.TWtext+'时间墙回复了50血量！<br>'}
-		if(Math.random()>0.8) {player.m.currentHP=player.m.currentHP.sub(player.m.TWatk.times(4))
-            player.m.TWtext=player.m.TWtext+'时间墙使用了暴击技能，总共对你造成了5倍伤害！<br>'}
+		TWRecover(50,0.5)
+		TWCritical(4,0.2)
 		}
-		if(id.eq(3)) {if(Math.random()>0.75){player.m.currentPoiBuff=player.m.currentPoiBuff.add(2)
-			player.m.TWtext=player.m.TWtext+'时间墙给你施加了2回合的剧毒效果！<br>'}
+		if(id.eq(3)) {
+		TWPoison(0.25,2)
 		}
 		if(id.eq(4)) {
-		if(Math.random()>0.5) {player.m.TWbp=player.m.TWbp.add(240)
-            player.m.TWtext=player.m.TWtext+'时间墙使用了超级点击技能，总共获得了5倍的普通点数！<br>'}
-		if(Math.random()>0.6) {player.m.TWPoison=n(0)
-            player.m.TWtext=player.m.TWtext+'时间墙使用了蜂蜜，清除了自身的剧毒效果！<br>'}
-		if(player.m.BasicPoint.lt(player.m.TWbp)) {player.m.currentHP=n(-9999)
-			player.m.TWtext=player.m.TWtext+'你的普通点数被时间墙压制了，时间墙将你秒杀了！<br>'}
+		TWSuperClick(4,0.5)
+		TWHoney(0.4)
+		TWBPcheck()
 		}
 		if(id.eq(5)) {
-		if(Math.random()>0.8) {player.m.currentHP=player.m.currentHP.sub(tmp.p.maxHP.times(0.1))
-            player.m.TWtext=player.m.TWtext+'时间墙使用了偷袭技能，对你造成了最大血量10%的伤害！<br>'}
+		TWtouxi(0.1,0.2)
 		if(player.m.RoundUsed.div(3).floor().eq(player.m.RoundUsed.div(3))) {player.m.currentSP=n(0)
             player.m.TWtext=player.m.TWtext+'时间墙清除了你的技能点！<br>'}
 		}
-    }
+		if(id.eq(6)) {
+		if(player.m.TWhp.lte(1920000)){player.m.TWhp=n(0)
+			player.m.TWtext=player.m.TWtext+'时间墙因血量流失过多，感到耻辱，自尽了！<br>'}
+		}
+		if(id.eq(7)) {
+		TWRecover(233,0.5)
+		TWCritical(2,0.2)
+		TWSuperClick(3,0.5)
+		if(player.m.currentPoiBuff.lt(5)) TWPoison(0.5,1)
+    	}
+		if(id.eq(8)) {
+		TWSuperClick(4,0.5)
+		TWCritical(5,0.1)
+		TWhpLine(0.1)
+		if(Math.random() < 0.5) makeParticles(Gear, 5)
+		}
+	}
+
+//Timewall Common Skill
+function TWSuperClick(mult,chance){
+	if(Math.random()> 1-chance) {player.m.TWbp=player.m.TWbp.add(player.m.TWbpPerRound.times(mult))
+    player.m.TWtext=player.m.TWtext+'时间墙使用了超级点击技能，总共获得了'+format(n(1).add(mult),1)+'倍的普通点数！<br>'}
+}
+
+function TWRecover(HP,chance){
+	if(Math.random()> 1-chance) {player.m.TWhp=player.m.TWhp.add(HP)
+	player.m.TWtext=player.m.TWtext+'时间墙回复了'+format(HP,2)+'点血量！<br>'}
+}
+
+function TWCritical(mult,chance){
+	if(Math.random()> 1-chance) {player.m.currentHP=player.m.currentHP.sub(player.m.TWatk.times(mult))
+	player.m.TWtext=player.m.TWtext+'时间墙使用了暴击技能，总共对你造成了'+format(n(1).add(mult),1)+'倍的伤害！<br>'}
+}
+
+function TWBPcheck(){
+	if(player.m.BasicPoint.lt(player.m.TWbp)) {player.m.currentHP=n(-9999)
+	player.m.TWtext=player.m.TWtext+'你的普通点数被时间墙压制了，时间墙将你秒杀了！<br>'}
+}
+
+function TWPoison(chance,round){
+	if(Math.random()> 1-chance) {player.m.TWPoison=player.m.TWPoison.add(round)
+	player.m.TWtext=player.m.TWtext+'时间墙给你施加了'+format(round,0)+'回合的剧毒效果！<br>'}
+}
+
+function TWHoney(chance){
+	if(Math.random()> 1-chance) {player.m.TWPoison=n(0)
+	player.m.TWtext=player.m.TWtext+'时间墙使用了蜂蜜，清除了自身的剧毒效果！<br>'}
+}
+
+function TWtouxi(percent,chance){
+	if(Math.random()> 1-chance) {player.m.currentHP=player.m.currentHP.sub(tmp.p.maxHP.times(percent))
+	player.m.TWtext=player.m.TWtext+'时间墙使用了偷袭技能，对你造成了最大血量'+format(percent.times(100),0)+'%的伤害！<br>'}
+}
+function TWhpLine(percent){
+	if(player.m.currentHP.div(tmp.p.maxHP).lte(percent)) {player.m.currentHP=n(-9999)
+	player.m.TWtext=player.m.TWtext+'时间墙使用了斩杀技能，将你斩杀了！<br>'}
+}
+
+const Gear = {
+    image:"options_wheel.png",
+	angle:0,
+    spread: 72,
+    gravity: 0,
+	offset:0,
+    time: 5,
+	width: 65,
+    height: 65,
+	speed:5,
+	Timer:0,
+	color:"#ff0000",
+	x: Math.random() * (window.innerWidth - 100) + 50,
+    y: Math.random() * (window.innerHeight - 100) + 50,
+	onDelete(){player.m.BasicPoint=player.m.BasicPoint.sub(100)},//onStart
+	onClick(){player.m.BasicPoint=player.m.BasicPoint.add(100)
+		Vue.delete(particles, this.id)},
+}

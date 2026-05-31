@@ -29,10 +29,12 @@ addLayer("I", {
         content: [ "main-display",["infobox",'About'],["infobox",'Basic1'],["infobox",'Lv'],["infobox",'Skill'],
         ["infobox",'Timewall'],["infobox",'Skill2'],["infobox",'Shop'],["infobox",'Item1'],["infobox",'Item2'],
         ["infobox",'Lv9'],["infobox",'Item3'],["infobox",'HPLoss'],["infobox",'Item4'],["infobox",'Upg1'],
-        ["infobox",'TWskill'],["infobox",'Poison'],["infobox",'Poison2'],["infobox",'RanBox'],]
+        ["infobox",'TWskill'],["infobox",'Poison'],["infobox",'Poison2'],["infobox",'RanBox'],["infobox",'Upg2'],
+        ["infobox",'Skill3'],["infobox",'Mil'],["infobox",'Skill4'],],
     },
     "Timewall": {
-        content: [ "main-display",["infobox",'2'],["infobox",'3'],["infobox",'4'],["infobox",'5'],],
+        content: [ "main-display",["infobox",'2'],["infobox",'3'],["infobox",'4'],["infobox",'5'],["infobox",'6'],["infobox",'7'],
+                ["infobox",'8'],],
         unlocked(){return player.m.points.gte(15)}
     },},
     infoboxes: {
@@ -125,6 +127,31 @@ addLayer("I", {
         body() { return "天降礼盒在关卡21首次出现。其会每隔一段时间给你一个免费礼盒，在任意时刻都可以使用。但需要注意，免费礼盒出现负面事件的概率为50%！" },
         unlocked(){return player.m.points.gte(21)}
     },
+    Upg2: {
+        title: "关于点击点数",
+        body() { return "点击点数可以让你购买可以提升点击获得的普通点数的加点升级！<br>点击点数奖励 = 通关时普通点数" },
+        unlocked(){return player.m.points.gte(26)}
+    },
+    Skill3: {
+        title: "关于偷袭",
+        body() { return "偷袭技能在关卡29解锁，它能让你对敌人造成基于敌人当前血量的百分比伤害，有时会发挥出特别的效果！" },
+        unlocked(){return player.m.points.gte(29)}
+    },
+    Mil: {
+        title: "关于里程碑",
+        body() { return "你的第一个里程碑在通过关卡30后解锁，可以在p层级'Milestones'页面查看。里程碑会在通过特定关卡时解锁，可以给你全局加成（如减少升级所需点数等）。继续探索吧！" },
+        unlocked(){return player.m.points.gte(31)}
+    },
+    Skill4: {
+        title: "关于点数夺取",
+        body() { return "点数夺取技能在关卡31解锁，它能让你从时间墙那里夺取一定比例的普通点数，在某些时刻也会用到！" },
+        unlocked(){return player.m.points.gte(31)}
+    },
+    skillUpg: {
+        title: "关于技能升级",
+        body() { return "在通过关卡32后，你将会解锁技能升级系统。技能升级需要一种特殊的货币——技能水晶，这种货币只能在商店中购买。技能升级与加点升级一样，都是推进游戏进度所必须的！" },
+        unlocked(){return player.m.points.gte(33)}
+    },
     //TWskill
     2: {
         title: "Level 15 (ID:2)",
@@ -146,7 +173,24 @@ addLayer("I", {
         body() { return "1.每回合有20%概率使用偷袭技能，造成最大血量10%的伤害<br>2.每3回合清除你的技能点"},
         unlocked(){return player.m.points.gte(25)}
     },
-}
+    6: {
+        title: "Level 29 (ID:6)",
+        body() { return "当时间墙血量在1920000及以下时会自尽"},
+        unlocked(){return player.m.points.gte(29)}
+    },
+    7: {
+        title: "Level 30 (ID:7)",
+        body() { return "1.每回合有50%概率恢复233血量<br>2.每回合有20%概率使用暴击技能，造成4倍伤害<br>3.每回合有20%概率使用超级点击技能，获得5倍的普通点数<br>4.当你的剧毒效果持续时间小于5回合时，每回合有50%概率给你施加1回合的剧毒效果" },
+        unlocked(){return player.m.points.gte(30)}
+    },
+    8: {
+        title: "Level 35 (ID:8)",
+        body() { a="1.每回合有50%概率使用超级点击技能，获得5倍的普通点数<br>2.每回合有10%概率使用暴击技能，造成5倍伤害<br>3.当你的血量小于最大血量的10%时，使用斩杀技能，你将被秒杀"
+            a=a+"<br>4.每回合有50%概率在随机位置生成5个齿轮并朝5个方向扩散，每个齿轮生成时扣除你的100普通点数，持续5s后消失（不返还普通点数），点击可使其立即消失并返回普通点数" 
+        return a},
+        unlocked(){return player.m.points.gte(35)}
+    }
+    }
 })
 
 addLayer("m", {
@@ -326,24 +370,30 @@ addLayer("m", {
     //In-level Basic contents(id=0)
     41: {
         title() {return "点击"},
-        display() {return "获得"+format(100)+'普通点数，有1回合的冷却时间<br>当前剩余冷却时间：'+format(n(getClickableState(this.layer,this.id)),0)+'回合'},
+        display() {return "获得"+format(clickableEffect(this.layer,this.id))+'普通点数，有1回合的冷却时间<br>当前剩余冷却时间：'+format(n(getClickableState(this.layer,this.id)),0)+'回合'},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(0)},
+        effect(){a=n(100).add(getBuyableAmount('p',33))
+            return a
+        },
         canClick() {a= getClickableState(this.layer,this.id) == 0&&tmp.m.ButtonCanClick
             return a
         },
-        onClick() {player.m.BasicPoint = player.m.BasicPoint.add(100)
+        onClick() {player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,this.id))
             setClickableState(this.layer,this.id,2)
             AnyOperation()
         },
     },
     42: {
         title() {return "轻度点击"},
-        display() {return "获得"+format(50)+'普通点数，无冷却时间'},
+        display() {return "获得"+format(clickableEffect(this.layer,this.id))+'普通点数，无冷却时间'},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(0)},
+        effect(){a=n(50).add(getBuyableAmount('p',34))
+            return a
+        },
         canClick() {a=tmp.m.ButtonCanClick
             return a
         },
-        onClick() {player.m.BasicPoint = player.m.BasicPoint.add(50)
+        onClick() {player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,this.id))
             AnyOperation()
         },
     },
@@ -361,7 +411,7 @@ addLayer("m", {
         title() {return "切换至道具界面"},
         display() {return "切换至道具界面"},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(0)&&player.m.points.gte(7)},
-        canClick() {a=tmp.m.ButtonCanClick
+        canClick() {a=tmp.m.ButtonCanClick&&!tmp.m.goal[player.m.currentLevel.toNumber()].noItem
             return a
         },
         onClick() {player.m.ButtonShowId = n(2)
@@ -392,12 +442,13 @@ addLayer("m", {
     //Skill(id=1)
     61: {
         title() {return "超级点击"},
-        display() {return "消耗"+format(20)+"技能点与"+format(20)+"点数，获得"+format(5)+'倍点击所获得的普通点数'},
+        display() {return "消耗"+format(20)+"技能点与"+format(20)+"点数，获得"+format(clickableEffect(this.layer,this.id),1)+'倍点击所获得的普通点数'},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)},
+        effect(){return getBuyableAmount('p',41).times(0.1).add(5)},
         canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(20)&&player.m.currentSP.gte(20)
             return a
         },
-        onClick() {player.m.BasicPoint = player.m.BasicPoint.add(n(100).times(5))
+        onClick() {player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect(this.layer,41)).times(clickableEffect(this.layer,this.id)))
             player.points=player.points.sub(20)
             player.m.currentSP=player.m.currentSP.sub(20)
             AnyOperation()
@@ -405,18 +456,48 @@ addLayer("m", {
     },
     62: {
         title() {return "暴击"},
-        display() {return "消耗"+format(30)+"技能点与"+format(30)+"点数，对敌人造成"+format(5)+'倍伤害<br>仅当敌人存活时可使用'},
+        display() {return "消耗"+format(30)+"技能点与"+format(30)+"点数，对敌人造成"+format(clickableEffect(this.layer,this.id),1)+'倍伤害<br>仅当敌人存活时可使用'},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(6)},
+        effect(){return getBuyableAmount('p',42).times(0.1).add(5)},
         canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(30)&&player.m.currentSP.gte(30)&&player.m.TWhp.gt(0)
             return a
         },
-        onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(5))
+        onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(clickableEffect(this.layer,this.id)))
             player.points=player.points.sub(30)
             player.m.currentSP=player.m.currentSP.sub(30)
             AnyOperation()
         },
     },
     63: {
+        title() {return "偷袭"},
+        display() {return "消耗"+format(50)+"技能点与"+format(100)+"点数，对敌人造成敌人当前血量的"+format(clickableEffect(this.layer,this.id).times(100),1)+'%伤害<br>仅当敌人存活时可使用'},
+        unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(29)},
+        effect(){return n(0.2).add(getBuyableAmount('p',43).times(0.002))},
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(100)&&player.m.currentSP.gte(50)&&player.m.TWhp.gt(0)
+            return a
+        },
+        onClick() {player.m.TWhp = player.m.TWhp.times(n(1).sub(clickableEffect(this.layer,this.id)))
+            player.points=player.points.sub(100)
+            player.m.currentSP=player.m.currentSP.sub(50)
+            AnyOperation()
+        },
+    },
+    64: {
+        title() {return "点数夺取"},
+        display() {return "消耗"+format(30)+"技能点与"+format(60)+"点数，夺取时间墙普通点数的"+format(clickableEffect(this.layer,this.id).times(100),1)+'%<br>仅当时间墙存活时可使用'},
+        unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(31)},
+        effect(){return n(0.5).add(getBuyableAmount('p',44).times(0.005))},
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(60)&&player.m.currentSP.gte(30)&&player.m.TWhp.gt(0)
+            return a
+        },
+        onClick() {player.m.BasicPoint = player.m.BasicPoint.add(player.m.TWbp.times(clickableEffect(this.layer,this.id)))
+            player.m.TWbp = player.m.TWbp.times(n(1).sub(clickableEffect(this.layer,this.id)))
+            player.points=player.points.sub(60)
+            player.m.currentSP=player.m.currentSP.sub(30)
+            AnyOperation()
+        },
+    },
+    65: {
         title() {return "退出技能界面"},
         display() {return "回到普通界面"},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)},
@@ -522,7 +603,8 @@ addLayer("m", {
         unlocked() {return player.m.currentLevel.neq(0)},
         canClick() {return true},
         onClick() {if(tmp.m.LevelSucceed){player.points = player.points.add(tmp.m.LevelReward)
-            player.p.DefensePoint=player.p.DefensePoint.add(tmp.m.LevelReward2)
+            if(player.m.points.gte(14))player.p.DefensePoint=player.p.DefensePoint.add(tmp.m.LevelReward2)
+            if(player.m.points.gte(26))player.p.pointPoint=player.p.pointPoint.add(tmp.m.LevelReward3)
             if(player.m.currentLevel.eq(player.m.points)) player.m.points=player.m.points.add(1)
         }
             player.m.ButtonShowId=n(0)
@@ -555,13 +637,16 @@ addLayer("m", {
         },
     },
     },
-    goaldescription(){a=['获得900普通点数','在6次操作内获得450普通点数','在2次操作内获得600普通点数','在6次操作内获得900普通点数','击败时间墙并获得1500普通点数',//1-5
-        '在5次操作内击败时间墙且获得1100普通点数','在1次操作内获得850普通点数','在7次操作内获得1400普通点数','在3次操作内击败时间墙并获得600普通点数','在16次操作内击败时间墙并获得1250普通点数',//6-10
-        '在血量流失的状态下获得2000普通点数（每秒流失10血量）','在血量流失的状态下5次操作内获得2000普通点数（每秒流失30血量）','在血量流失的状态下不使用技能5次操作内击败时间墙并获得1300普通点数（每秒流失15血量）',//11-13
-        '在血量流失的状态下2次操作内获得1000普通点数（每秒流失150血量）','击败时间墙并获得1500普通点数','在毒气中获得3500普通点数（每3秒增加1回合剧毒buff）',//14-16
-        '在毒气(0.1)中不使用技能3次操作内击败时间墙并获得850普通点数','在血量流失(45)的情况下不使用技能击败时间墙并获得600普通点数','在血量流失(35)与毒气(2)的情况下10次操作内击败时间墙并获得1000普通点数',//17-19
-        '在血量流失(30)与毒气(5)的情况下击败时间墙并获得2100普通点数','在天降礼盒(5)的情况下5次操作内获得3600普通点数','在天降礼盒(3)的情况下1次操作内获得3000普通点数',//20-22
-        '在血量流失(50)与天降礼盒(1)的情况下不使用技能1次操作内获得300普通点数','在血量流失(25)与天降礼盒(1)的情况下15次操作内获得5000普通点数','在血量流失(50)与天降礼盒(2)的情况下10次操作内击败时间墙并获得1500普通点数',//23-25
+    goaldescription(){a=['获得900普通点数','在6回合内获得450普通点数','在2回合内获得600普通点数','在6回合内获得900普通点数','击败时间墙并获得1500普通点数',//1-5
+        '在5回合内击败时间墙且获得1100普通点数','在1回合内获得850普通点数','在7回合内获得1400普通点数','在3回合内击败时间墙并获得600普通点数','在16回合内击败时间墙并获得1250普通点数',//6-10
+        '在血量流失的状态下获得2000普通点数（每秒流失10血量）','在血量流失的状态下5回合内获得2000普通点数（每秒流失30血量）','在血量流失的状态下不使用技能5回合内击败时间墙并获得1300普通点数（每秒流失15血量）',//11-13
+        '在血量流失的状态下2回合内获得1000普通点数（每秒流失150血量）','击败时间墙并获得1500普通点数','在毒气中获得3500普通点数（每3秒增加1回合剧毒buff）',//14-16
+        '在毒气(0.1)中不使用技能3回合内击败时间墙并获得850普通点数','在血量流失(45)的情况下不使用技能击败时间墙并获得600普通点数','在血量流失(35)与毒气(2)的情况下10回合内击败时间墙并获得1000普通点数',//17-19
+        '在血量流失(30)与毒气(5)的情况下击败时间墙并获得2100普通点数','在天降礼盒(5)的情况下5回合内获得3600普通点数','在天降礼盒(3)的情况下1回合内获得3000普通点数',//20-22
+        '在血量流失(50)与天降礼盒(1)的情况下不使用技能1回合内获得300普通点数','在血量流失(25)与天降礼盒(1)的情况下15回合内获得5000普通点数','在血量流失(50)与天降礼盒(2)的情况下10回合内击败时间墙并获得1500普通点数',//23-25
+        '在6回合内不使用技能与物品获得456普通点数','在天降礼盒(2)的情况下10回合内不使用技能与物品获得1000普通点数','在血量流失(25)的情况下14回合内获得6120普通点数','在血量流失(30)的情况下3回合内击败时间墙并获得200普通点数',//26-29
+        '在毒气(3)下击败时间墙并获得3500普通点数','在6回合内不使用物品击败时间墙并获得1575普通点数','在天降礼盒(1)的情况下8回合内获得6000普通点数','在血量流失(150)的情况下3回合内不使用物品获得1606.5普通点数',//30-33
+        '在血量流失(100)的情况下2回合内不使用物品击败时间墙并获得2000普通点数','在60回合内击败时间墙并获得7000普通点数',
     ]
         return a
     },
@@ -591,6 +676,16 @@ addLayer("m", {
         23:{BasicPoint:n(300),RoundLimit:n(1),RanBox:n(1),DPS:n(50),noSkill:true,Difficulty:n(3.1),},
         24:{BasicPoint:n(5000),RoundLimit:n(15),RanBox:n(1),DPS:n(25),Difficulty:n(3.6),},
         25:{BasicPoint:n(1500),RoundLimit:n(10),RanBox:n(2),DPS:n(50),TimewallId:n(5),TimewallHP:n(1200),TimewallATK:n(30),TimewallBP:n(200),Difficulty:n(4.3),},
+        26:{BasicPoint:n(456),RoundLimit:n(6),noSkill:true,noItem:true,Difficulty:n(2.1),},
+        27:{BasicPoint:n(1000),RoundLimit:n(10),RanBox:n(2),noSkill:true,noItem:true,Difficulty:n(3.0),},
+        28:{BasicPoint:n(6120),RoundLimit:n(14),DPS:n(25),Difficulty:n(3.2),},
+        29:{BasicPoint:n(200),RoundLimit:n(3),DPS:n(30),TimewallId:n(6),TimewallHP:n(3000000),TimewallATK:n(40),TimewallBP:n(200),Difficulty:n(3.4),},
+        30:{BasicPoint:n(3500),PoiTime:n(3),TimewallId:n(7),TimewallHP:n(2330),TimewallATK:n(15),TimewallBP:n(120),Difficulty:n(4.5),},
+        31:{BasicPoint:n(1575),RoundLimit:n(6),noItem:true,TimewallId:n(1),TimewallHP:n(480),TimewallATK:n(50),TimewallBP:n(450),Difficulty:n(3.7),},
+        32:{BasicPoint:n(6000),RoundLimit:n(8),RanBox:n(1),Difficulty:n(4.3),},
+        33:{BasicPoint:n(1606.5),RoundLimit:n(3),noItem:true,DPS:n(150),Difficulty:n(2.7),},
+        34:{BasicPoint:n(2000),RoundLimit:n(2),noItem:true,DPS:n(100),TimewallId:n(1),TimewallHP:n(193),TimewallATK:n(100),TimewallBP:n(3000),Difficulty:n(3.1),},
+        35:{BasicPoint:n(7000),RoundLimit:n(60),TimewallId:n(8),TimewallHP:n(4000),TimewallATK:n(44),TimewallBP:n(150),Difficulty:n(4.6),},
     },
     Leveltext(){a='<br>当前选择关卡：Level '+format(player.m.selectedLevel,0)
         a=a+"<br>目标："+tmp.m.goaldescription[player.m.selectedLevel.sub(1).toNumber()]
@@ -625,6 +720,7 @@ addLayer("m", {
         if(tmp.m.LevelFailed&&!tmp.m.LevelSucceed) a=a+'<br>关卡失败了！再接再厉，继续努力吧！'
         if(tmp.m.LevelSucceed) {a=a+'<br>关卡胜利了！基于你的普通点数，你将获得'+format(tmp.m.LevelReward)+'点数'
             if(player.m.points.gte(14)) a=a+'<br>基于你的剩余血量，你将获得'+format(tmp.m.LevelReward2)+'防御点数'
+            if(player.m.points.gte(26)) a=a+'<br>基于你的普通点数，你将获得'+format(tmp.m.LevelReward3)+'点击点数'
         }
         return a
     },
@@ -651,10 +747,13 @@ addLayer("m", {
     LevelReward2(){a=player.m.currentHP.max(0).div(tmp.p.maxHP).times(10).times(tmp.m.LevelReward)//DeP
         return a
     },
+    LevelReward3(){a=player.m.BasicPoint//DeP
+        return a
+    },
     HPActualLoss(){if(player.m.currentLevel.eq(0)||tmp.m.goal[player.m.currentLevel.toNumber()].DPS==undefined) return n(0)
         a=tmp.m.goal[player.m.currentLevel.toNumber()].DPS.times(n(1).sub(getBuyableAmount('p',31).times(0.01)))
         return a
-    }
+    },
 })
 
 addLayer("p", {
@@ -667,6 +766,9 @@ addLayer("p", {
 		points: new Decimal(1),
 
         DefensePoint:n(0),
+        pointPoint:n(0),
+
+        skillCrystal:n(0),
     }},
     color: "#29ff22",
     requires: new Decimal(0), // Can be a function that takes requirement increases into account
@@ -711,6 +813,16 @@ addLayer("p", {
         content: [ "main-display",["display-text", () => tmp.p.Upgtext],["buyables",[3]],
         ],
         unlocked(){return player.m.points.gte(14)},
+    },
+    "Skill Upgrades": {
+        content: [ "main-display",["display-text", () => tmp.p.SUtext],["buyables",[4]],
+        ],
+        unlocked(){return player.m.points.gte(14)},
+    },
+    "Milestones": {
+        content: [ "main-display","milestones",
+        ],
+        unlocked(){return player.m.points.gte(31)},
     },
     },
     clickables: {
@@ -818,6 +930,22 @@ addLayer("p", {
             addBuyables(this.layer,this.id,n(1))
         }
     },
+    23: {
+        title() {return "技能水晶(15个)"},
+        cost(x){a= n(500)
+            if(hasMilestone('p',1)) a= n(450)
+            return a
+        },
+        display() {a= "获得15个技能水晶"
+            a=a+'<br>花费：'+format(this.cost())+'点数'
+            return a
+        },
+        unlocked() {return player.m.points.gte(33)},
+        canAfford(){return player.points.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.points=player.points.sub(this.cost())
+            player.p.skillCrystal=player.p.skillCrystal.add(15)
+        },
+    },
     //Upg tab
     31: {
         title() {return "抗血量流失("+format(getBuyableAmount(this.layer,this.id),0)+'/75)'},
@@ -851,6 +979,132 @@ addLayer("p", {
         },
         purchaseLimit:n(50),
     },
+    33: {
+        title() {return "点击普通点数("+format(getBuyableAmount(this.layer,this.id),0)+'/50)'},
+        cost(x){a= x.add(1).times(1500)
+            return a
+        },
+        display() {a= "每次升级使点击获得的普通点数+1<br>当前：+"+format(getBuyableAmount(this.layer,this.id))
+            a=a+'<br>花费：'+format(this.cost())+'点击点数'
+            return a
+        },
+        unlocked() {return player.m.points.gte(26)},
+        canAfford(){return player.p.pointPoint.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.p.pointPoint=player.p.pointPoint.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        },
+        purchaseLimit:n(50),
+    },
+    34: {
+        title() {return "轻度点击普通点数("+format(getBuyableAmount(this.layer,this.id),0)+'/50)'},
+        cost(x){a= x.add(1).times(1500)
+            return a
+        },
+        display() {a= "每次升级使轻度点击获得的普通点数+1<br>当前：+"+format(getBuyableAmount(this.layer,this.id))
+            a=a+'<br>花费：'+format(this.cost())+'点击点数'
+            return a
+        },
+        unlocked() {return player.m.points.gte(26)},
+        canAfford(){return player.p.pointPoint.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.p.pointPoint=player.p.pointPoint.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        },
+        purchaseLimit:n(50),
+    },
+    //skill upg tab
+    41: {
+        title() {return "超级点击("+format(getBuyableAmount(this.layer,this.id),0)+'/50)'},
+        cost(x){a= x.add(1).times(10)
+            return a
+        },
+        display() {a= "每次升级使超级点击倍率+0.1<br>当前："+format(clickableEffect('m',61),1)+'x'
+            a=a+'<br>此技能到达10级：超级点击时有20%的概率触发一次额外的微型点击'
+            a=a+'<br>此技能到达20级：每10回合自动进行一次倍率为5的超级点击'
+            a=a+'<br>此技能到达30级：超级点击消耗的技能点与点数-5'
+            a=a+'<br>此技能到达40级：点击或微型点击时有5%概率触发一次倍率为5的超级点击'
+            a=a+'<br>花费：'+format(this.cost())+'技能水晶'
+            return a
+        },
+        unlocked() {return player.m.points.gte(33)},
+        canAfford(){return player.p.skillCrystal.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.p.skillCrystal=player.p.skillCrystal.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        },
+        purchaseLimit:n(50),
+    },
+    42: {
+        title() {return "暴击("+format(getBuyableAmount(this.layer,this.id),0)+'/50)'},
+        cost(x){a= x.add(1).times(10)
+            return a
+        },
+        display() {a= "每次升级使暴击倍率+0.1<br>当前："+format(clickableEffect('m',62),1)+'x'
+            a=a+'<br>此技能到达10级：暴击后有20%的概率恢复自身5%最大血量'
+            a=a+'<br>此技能到达20级：暴击恢复血量的概率提升至50%'
+            a=a+'<br>此技能到达30级：暴击消耗的技能点与点数-5'
+            a=a+'<br>此技能到达40级：普通攻击时有5%概率触发一次倍率为5的暴击'
+            a=a+'<br>花费：'+format(this.cost())+'技能水晶'
+            return a
+        },
+        unlocked() {return player.m.points.gte(33)},
+        canAfford(){return player.p.skillCrystal.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.p.skillCrystal=player.p.skillCrystal.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        },
+        purchaseLimit:n(50),
+    },
+    43: {
+        title() {return "偷袭("+format(getBuyableAmount(this.layer,this.id),0)+'/50)'},
+        cost(x){a= x.add(1).times(10)
+            return a
+        },
+        display() {a= "每次升级使偷袭倍率+0.2%<br>当前："+format(clickableEffect('m',63).times(100),1)+'%'
+            a=a+'<br>此技能到达10级：偷袭时额外进行一次普通攻击'
+            a=a+'<br>此技能到达20级：每5回合自动进行一次倍率为5%的偷袭'
+            a=a+'<br>此技能到达30级：偷袭消耗的技能点-10，,点数-25'
+            a=a+'<br>此技能到达40级：此技能20级效果的倍率提升至10%'
+            a=a+'<br>花费：'+format(this.cost())+'技能水晶'
+            return a
+        },
+        unlocked() {return player.m.points.gte(33)},
+        canAfford(){return player.p.skillCrystal.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.p.skillCrystal=player.p.skillCrystal.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        },
+        purchaseLimit:n(50),
+    },
+    44: {
+        title() {return "点数夺取("+format(getBuyableAmount(this.layer,this.id),0)+'/50)'},
+        cost(x){a= x.add(1).times(10)
+            return a
+        },
+        display() {a= "每次升级使点数夺取倍率+0.5%<br>当前："+format(clickableEffect('m',64).times(100),1)+'%'
+            a=a+'<br>此技能到达10级：点数夺取时额外夺取100普通点数'
+            a=a+'<br>此技能到达20级：点数夺取时额外夺取50点数'
+            a=a+'<br>此技能到达30级：点数夺取消耗的技能点-5，点数-20'
+            a=a+'<br>此技能到达40级：每10回合自动进行一次倍率为20%的点数夺取'
+            a=a+'<br>花费：'+format(this.cost())+'技能水晶'
+            return a
+        },
+        unlocked() {return player.m.points.gte(33)},
+        canAfford(){return player.p.skillCrystal.gte(this.cost())&&player.m.currentLevel.eq(0)},
+        buy(){player.p.skillCrystal=player.p.skillCrystal.sub(this.cost())
+            addBuyables(this.layer,this.id,n(1))
+        },
+        purchaseLimit:n(50),
+    },
+    },
+    milestones: {
+    0: {
+        requirementDescription: "通过关卡30",
+        effectDescription: "减少升级所需要的点数花费",
+        done() { return player.m.points.gt(30) }
+    },
+    1: {
+        requirementDescription: "通过关卡35",
+        effectDescription: "技能水晶价格小幅降低",
+        done() { return player.m.points.gt(35) },
+        unlocked() { return hasMilestone('p',0)},
+    },
     },
     Playertext(){a='玩家信息：<br>等级：'+format(player.p.points,0)
         a=a+'<br>初始血量：'+format(tmp.p.maxHP)
@@ -868,7 +1122,9 @@ addLayer("p", {
     ATK(){a=player.p.points.times(2).add(8)
         return a
     },
-    ptRequired(){a=player.p.points.times(200).add(-100)
+    ptRequired(){b=n(200)
+        if(hasMilestone('p',0)) b=n(180)
+        a=player.p.points.times(b).add(-100)
         return a
     },
     Shoptext(){a='你可以在这里购买关卡内使用的各种道具！更多道具将在后面的关卡中解锁。与升级类似，在关卡内你不能购买道具！'
@@ -876,6 +1132,11 @@ addLayer("p", {
     },
     Upgtext(){a='你可以在这里购买各种加点升级，使你的推关进度更容易！与升级类似，在关卡内你不能购买加点升级！'
         a=a+'<br>你有'+format(player.p.DefensePoint)+'防御点数'
+        if(player.m.points.gte(26)) a=a+'<br>你有'+format(player.p.pointPoint)+'点击点数'
+        return a
+    },
+    SUtext(){a='你可以在这里使用技能水晶升级各种技能，增加技能的数值，并获得更多的额外效果！（现版本所有额外效果都未实现）与升级类似，在关卡内你不能进行技能升级！'
+        a=a+'<br>你有'+format(player.p.skillCrystal)+'技能水晶'
         return a
     },
 })
