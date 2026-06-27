@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.0.0",
-	name: "Level 35",
+	num: "1.0.1",
+	name: "Level 36",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
@@ -24,7 +24,9 @@ let changelog = `<h1>Changelog:</h1><br>
 		- 完成前25关，增加了难度系统<br>
 	<h3>v1.0.0 2026/5/24~2026/5/31</h3><br>
 		- 完成前35关，增加了技能升级与里程碑<br>
-		- 内置vue.js<br>`
+		- 内置vue.js<br>
+		<h3>v1.0.1 2026/6/27</h3><br>
+		- 完成前36关，实现了所有技能升级的额外效果<br>`
 
 let winText = `恭喜！你 >暂时< 通关了！`
 
@@ -90,6 +92,14 @@ function n(num){
 function AnyOperation(){
 	player.m.TWtext=''
 	player.m.RoundUsed = player.m.RoundUsed.add(1)
+
+	if(getBuyableAmount('p',41).gte(20)&&divisible(player.m.RoundUsed,10)) player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect('m',41)).times(5))
+	if(getBuyableAmount('p',43).gte(20)&&divisible(player.m.RoundUsed,5)){a=n(0.95)
+		if(getBuyableAmount('p',43).gte(40)) a=n(0.9)
+		player.m.TWhp = player.m.TWhp.times(a)}
+	if(getBuyableAmount('p',44).gte(40)&&divisible(player.m.RoundUsed,10)){player.m.BasicPoint = player.m.BasicPoint.add(player.m.TWbp.times(0.2))
+            player.m.TWbp = player.m.TWbp.times(0.8)}
+
 	if(player.m.TWPoison.gt(0)){player.m.TWPoison=player.m.TWPoison.sub(1).max(0)
 			player.m.TWhp=player.m.TWhp.sub(tmp.m.CurrentATK.times(2))
 		}
@@ -204,7 +214,13 @@ function TWhpLine(percent){
 	player.m.TWtext=player.m.TWtext+'时间墙使用了斩杀技能，将你斩杀了！<br>'}
 }
 
-const Gear = {
+function chance(n){
+	return Math.random()<n
+}
+
+function divisible(num,con){return n(num).div(con).floor().eq(n(num).div(con))}
+
+const Gear = {//齿轮出现时扣除你的100普通点数，被点击后恢复
     image:"options_wheel.png",
 	angle:0,
     spread: 72,

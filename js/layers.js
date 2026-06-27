@@ -210,6 +210,9 @@ addLayer("m", {
         RoundUsed: n(0),
         TimeToNext: n(0),
 
+        SkillLim:[n(0),n(0),n(0),n(0)],
+
+
         currentHP: n(100),
         currentSP: n(20),
 
@@ -365,6 +368,11 @@ addLayer("m", {
             player.m.TimerforPoison=n(0)
             player.m.TimerforRanBox=n(0)
             player.m.FreeRanBox=n(0)
+            player.m.SkillLim=[n(-1),n(-1),n(-1),n(-1)]
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill1Limit!=undefined) player.m.SkillLim[0]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill1Limit
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill2Limit!=undefined) player.m.SkillLim[1]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill2Limit
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill3Limit!=undefined) player.m.SkillLim[2]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill3Limit
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill4Limit!=undefined) player.m.SkillLim[3]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill4Limit
         },
     },
     //In-level Basic contents(id=0)
@@ -379,6 +387,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,this.id))
+            if(getBuyableAmount('p',41).gte(40)&&chance(0.05)) player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect('m',41)).times(5))
             setClickableState(this.layer,this.id,2)
             AnyOperation()
         },
@@ -394,6 +403,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,this.id))
+            if(getBuyableAmount('p',41).gte(40)&&chance(0.05)) player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect('m',41)).times(5))
             AnyOperation()
         },
     },
@@ -425,6 +435,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK)
+            if(getBuyableAmount('p',41).gte(40)&&chance(0.05)) player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(5))
             AnyOperation()
         },
     },
@@ -442,58 +453,112 @@ addLayer("m", {
     //Skill(id=1)
     61: {
         title() {return "超级点击"},
-        display() {return "消耗"+format(20)+"技能点与"+format(20)+"点数，获得"+format(clickableEffect(this.layer,this.id),1)+'倍点击所获得的普通点数'},
+        display() {a= "消耗"+format(this.SPcost())+"技能点与"+format(this.PTcost())+"点数，获得"+format(clickableEffect(this.layer,this.id),1)+'倍点击所获得的普通点数'
+            if(player.m.SkillLim[0].gte(0)) a=a+'<br>剩余使用次数：'+format(player.m.SkillLim[0])
+            return a
+        },
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)},
         effect(){return getBuyableAmount('p',41).times(0.1).add(5)},
-        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(20)&&player.m.currentSP.gte(20)
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&player.m.SkillLim[0].neq(0)
+            return a
+        },
+        SPcost(){a=n(20)
+            if(getBuyableAmount('p',41).gte(30)) a=a.sub(5)
+            return a
+        },
+        PTcost(){a=n(20)
+            if(getBuyableAmount('p',41).gte(30)) a=a.sub(5)
             return a
         },
         onClick() {player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect(this.layer,41)).times(clickableEffect(this.layer,this.id)))
-            player.points=player.points.sub(20)
-            player.m.currentSP=player.m.currentSP.sub(20)
+            if(getBuyableAmount('p',41).gte(10)&&chance(0.2)) player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,42))
+            player.points=player.points.sub(this.PTcost())
+            player.m.currentSP=player.m.currentSP.sub(this.SPcost())
+            player.m.SkillLim[0]=player.m.SkillLim[0].sub(1)
             AnyOperation()
         },
     },
     62: {
         title() {return "暴击"},
-        display() {return "消耗"+format(30)+"技能点与"+format(30)+"点数，对敌人造成"+format(clickableEffect(this.layer,this.id),1)+'倍伤害<br>仅当敌人存活时可使用'},
+        display() {a="消耗"+format(this.SPcost())+"技能点与"+format(this.PTcost())+"点数，对敌人造成"+format(clickableEffect(this.layer,this.id),1)+'倍伤害<br>仅当敌人存活时可使用'
+            if(player.m.SkillLim[1].gte(0)) a=a+'<br>剩余使用次数：'+format(player.m.SkillLim[1])
+            return a
+        },
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(6)},
         effect(){return getBuyableAmount('p',42).times(0.1).add(5)},
-        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(30)&&player.m.currentSP.gte(30)&&player.m.TWhp.gt(0)
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&player.m.TWhp.gt(0)&&player.m.SkillLim[1].neq(0)
+            return a
+        },
+        SPcost(){a=n(30)
+            if(getBuyableAmount('p',42).gte(30)) a=a.sub(5)
+            return a
+        },
+        PTcost(){a=n(30)
+            if(getBuyableAmount('p',42).gte(30)) a=a.sub(5)
             return a
         },
         onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(clickableEffect(this.layer,this.id)))
-            player.points=player.points.sub(30)
-            player.m.currentSP=player.m.currentSP.sub(30)
+            if((getBuyableAmount('p',42).gte(10)&&chance(0.2))||(getBuyableAmount('p',42).gte(20)&&chance(0.5))) player.m.currentHP=player.m.currentHP.add(tmp.p.maxHP.times(0.05))
+            player.points=player.points.sub(this.PTcost())
+            player.m.currentSP=player.m.currentSP.sub(this.SPcost())
+            player.m.SkillLim[1]=player.m.SkillLim[1].sub(1)
             AnyOperation()
         },
     },
     63: {
         title() {return "偷袭"},
-        display() {return "消耗"+format(50)+"技能点与"+format(100)+"点数，对敌人造成敌人当前血量的"+format(clickableEffect(this.layer,this.id).times(100),1)+'%伤害<br>仅当敌人存活时可使用'},
+        display() {a= "消耗"+format(this.SPcost())+"技能点与"+format(this.PTcost())+"点数，对敌人造成敌人当前血量的"+format(clickableEffect(this.layer,this.id).times(100),1)+'%伤害<br>仅当敌人存活时可使用'
+            if(player.m.SkillLim[2].gte(0)) a=a+'<br>剩余使用次数：'+format(player.m.SkillLim[2])
+            return a
+        },
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(29)},
         effect(){return n(0.2).add(getBuyableAmount('p',43).times(0.002))},
-        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(100)&&player.m.currentSP.gte(50)&&player.m.TWhp.gt(0)
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&player.m.TWhp.gt(0)&&player.m.SkillLim[2].neq(0)
+            return a
+        },
+        SPcost(){a=n(50)
+            if(getBuyableAmount('p',43).gte(30)) a=a.sub(10)
+            return a
+        },
+        PTcost(){a=n(100)
+            if(getBuyableAmount('p',43).gte(30)) a=a.sub(25)
             return a
         },
         onClick() {player.m.TWhp = player.m.TWhp.times(n(1).sub(clickableEffect(this.layer,this.id)))
-            player.points=player.points.sub(100)
-            player.m.currentSP=player.m.currentSP.sub(50)
+            if(getBuyableAmount('p',43).gte(10))player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK)
+            player.points=player.points.sub(this.PTcost())
+            player.m.currentSP=player.m.currentSP.sub(this.SPcost())
+            player.m.SkillLim[2]=player.m.SkillLim[2].sub(1)
             AnyOperation()
         },
     },
     64: {
         title() {return "点数夺取"},
-        display() {return "消耗"+format(30)+"技能点与"+format(60)+"点数，夺取时间墙普通点数的"+format(clickableEffect(this.layer,this.id).times(100),1)+'%<br>仅当时间墙存活时可使用'},
+        display() {a="消耗"+format(this.SPcost())+"技能点与"+format(this.PTcost())+"点数，夺取时间墙普通点数的"+format(clickableEffect(this.layer,this.id).times(100),1)+'%<br>仅当时间墙存活时可使用'
+            if(player.m.SkillLim[3].gte(0)) a=a+'<br>剩余使用次数：'+format(player.m.SkillLim[3])
+            return a
+        },
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(31)},
         effect(){return n(0.5).add(getBuyableAmount('p',44).times(0.005))},
-        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(60)&&player.m.currentSP.gte(30)&&player.m.TWhp.gt(0)
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&player.m.TWhp.gt(0)&&player.m.SkillLim[3].neq(0)
+            return a
+        },
+        SPcost(){a=n(30)
+            if(getBuyableAmount('p',44).gte(30)) a=a.sub(5)
+            return a
+        },
+        PTcost(){a=n(60)
+            if(getBuyableAmount('p',44).gte(30)) a=a.sub(20)
             return a
         },
         onClick() {player.m.BasicPoint = player.m.BasicPoint.add(player.m.TWbp.times(clickableEffect(this.layer,this.id)))
             player.m.TWbp = player.m.TWbp.times(n(1).sub(clickableEffect(this.layer,this.id)))
-            player.points=player.points.sub(60)
-            player.m.currentSP=player.m.currentSP.sub(30)
+            if(getBuyableAmount('p',44).gte(10)) {player.m.BasicPoint = player.m.BasicPoint.add(100)
+            player.m.TWbp = player.m.TWbp.sub(100)}
+            if(getBuyableAmount('p',44).gte(20)) player.point = player.m.point.add(50)
+            player.points=player.points.sub(this.PTcost())
+            player.m.currentSP=player.m.currentSP.sub(this.SPcost())
+            player.m.SkillLim[3]=player.m.SkillLim[3].sub(1)
             AnyOperation()
         },
     },
@@ -646,7 +711,9 @@ addLayer("m", {
         '在血量流失(50)与天降礼盒(1)的情况下不使用技能1回合内获得300普通点数','在血量流失(25)与天降礼盒(1)的情况下15回合内获得5000普通点数','在血量流失(50)与天降礼盒(2)的情况下10回合内击败时间墙并获得1500普通点数',//23-25
         '在6回合内不使用技能与物品获得456普通点数','在天降礼盒(2)的情况下10回合内不使用技能与物品获得1000普通点数','在血量流失(25)的情况下14回合内获得6120普通点数','在血量流失(30)的情况下3回合内击败时间墙并获得200普通点数',//26-29
         '在毒气(3)下击败时间墙并获得3500普通点数','在6回合内不使用物品击败时间墙并获得1575普通点数','在天降礼盒(1)的情况下8回合内获得6000普通点数','在血量流失(150)的情况下3回合内不使用物品获得1606.5普通点数',//30-33
-        '在血量流失(100)的情况下2回合内不使用物品击败时间墙并获得2000普通点数','在60回合内击败时间墙并获得7000普通点数',
+        '在血量流失(100)的情况下2回合内不使用物品击败时间墙并获得2000普通点数','在60回合内击败时间墙并获得7000普通点数',//34-35
+        //Chepter 2
+        '在5回合内不使用物品获得1420.4普通点数且最多使用2次超级点击技能',//36-?
     ]
         return a
     },
@@ -686,6 +753,7 @@ addLayer("m", {
         33:{BasicPoint:n(1606.5),RoundLimit:n(3),noItem:true,DPS:n(150),Difficulty:n(2.7),},
         34:{BasicPoint:n(2000),RoundLimit:n(2),noItem:true,DPS:n(100),TimewallId:n(1),TimewallHP:n(193),TimewallATK:n(100),TimewallBP:n(3000),Difficulty:n(3.1),},
         35:{BasicPoint:n(7000),RoundLimit:n(60),TimewallId:n(8),TimewallHP:n(4000),TimewallATK:n(44),TimewallBP:n(150),Difficulty:n(4.6),},
+        36:{BasicPoint:n(1420.4),RoundLimit:n(5),noItem:true,Skill1Limit:n(2),Difficulty:n(2.5),},
     },
     Leveltext(){a='<br>当前选择关卡：Level '+format(player.m.selectedLevel,0)
         a=a+"<br>目标："+tmp.m.goaldescription[player.m.selectedLevel.sub(1).toNumber()]
@@ -1135,7 +1203,7 @@ addLayer("p", {
         if(player.m.points.gte(26)) a=a+'<br>你有'+format(player.p.pointPoint)+'点击点数'
         return a
     },
-    SUtext(){a='你可以在这里使用技能水晶升级各种技能，增加技能的数值，并获得更多的额外效果！（现版本所有额外效果都未实现）与升级类似，在关卡内你不能进行技能升级！'
+    SUtext(){a='你可以在这里使用技能水晶升级各种技能，增加技能的数值，并获得更多的额外效果！（现版本所有额外效果都已实现）与升级类似，在关卡内你不能进行技能升级！'
         a=a+'<br>你有'+format(player.p.skillCrystal)+'技能水晶'
         return a
     },
