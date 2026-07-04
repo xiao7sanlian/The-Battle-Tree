@@ -34,7 +34,7 @@ addLayer("I", {
     },
     "Timewall": {
         content: [ "main-display",["infobox",'2'],["infobox",'3'],["infobox",'4'],["infobox",'5'],["infobox",'6'],["infobox",'7'],
-                ["infobox",'8'],],
+                ["infobox",'8'],["infobox",'9'],],
         unlocked(){return player.m.points.gte(15)}
     },},
     infoboxes: {
@@ -189,7 +189,12 @@ addLayer("I", {
             a=a+"<br>4.每回合有50%概率在随机位置生成5个齿轮并朝5个方向扩散，每个齿轮生成时扣除你的100普通点数，持续5s后消失（不返还普通点数），点击可使其立即消失并返回普通点数" 
         return a},
         unlocked(){return player.m.points.gte(35)}
-    }
+    },
+    9: {
+        title: "Level 40 (ID:9)",
+        body() { return "1.每回合有75%概率给你施加2回合的剧毒效果<br>2.每回合有50%概率增加5攻击力" },
+        unlocked(){return player.m.points.gte(40)}
+    },
     }
 })
 
@@ -713,7 +718,9 @@ addLayer("m", {
         '在毒气(3)下击败时间墙并获得3500普通点数','在6回合内不使用物品击败时间墙并获得1575普通点数','在天降礼盒(1)的情况下8回合内获得6000普通点数','在血量流失(150)的情况下3回合内不使用物品获得1606.5普通点数',//30-33
         '在血量流失(100)的情况下2回合内不使用物品击败时间墙并获得2000普通点数','在60回合内击败时间墙并获得7000普通点数',//34-35
         //Chepter 2
-        '在5回合内不使用物品获得1420.4普通点数且最多使用2次超级点击技能',//36-?
+        '在5回合内不使用物品获得1420.4普通点数且最多使用2次超级点击技能','在3回合内不使用物品击败时间墙且最多使用2次暴击技能','在血量流失(20)的情况下获得3500普通点数且最多使用3次超级点击技能',//36-38
+        '在天降礼盒(1)的情况下1回合内获得1000普通点数且最多使用1次超级点击技能','在25回合内击败时间墙并获得2400普通点数且所有技能最多使用2次',//39~40
+        '在7回合内打败所有敌人并获得500票'
     ]
         return a
     },
@@ -753,7 +760,12 @@ addLayer("m", {
         33:{BasicPoint:n(1606.5),RoundLimit:n(3),noItem:true,DPS:n(150),Difficulty:n(2.7),},
         34:{BasicPoint:n(2000),RoundLimit:n(2),noItem:true,DPS:n(100),TimewallId:n(1),TimewallHP:n(193),TimewallATK:n(100),TimewallBP:n(3000),Difficulty:n(3.1),},
         35:{BasicPoint:n(7000),RoundLimit:n(60),TimewallId:n(8),TimewallHP:n(4000),TimewallATK:n(44),TimewallBP:n(150),Difficulty:n(4.6),},
+        //Chapter 2
         36:{BasicPoint:n(1420.4),RoundLimit:n(5),noItem:true,Skill1Limit:n(2),Difficulty:n(2.5),},
+        37:{BasicPoint:n(0),RoundLimit:n(3),noItem:true,Skill2Limit:n(2),TimewallId:n(1),TimewallHP:n(478.8),TimewallATK:n(0),TimewallBP:n(0),Difficulty:n(2.7),},
+        38:{BasicPoint:n(3500),DPS:n(20),Skill1Limit:n(3),Difficulty:n(3.5),},
+        39:{BasicPoint:n(1000),RoundLimit:n(1),RanBox:n(1),Skill1Limit:n(1),Difficulty:n(3.9),},
+        40:{BasicPoint:n(2400),RoundLimit:n(25),Skill1Limit:n(2),Skill2Limit:n(2),Skill3Limit:n(2),Skill4Limit:n(2),TimewallId:n(9),TimewallHP:n(1800),TimewallATK:n(30),TimewallBP:n(200),Difficulty:n(4.2),},
     },
     Leveltext(){a='<br>当前选择关卡：Level '+format(player.m.selectedLevel,0)
         a=a+"<br>目标："+tmp.m.goaldescription[player.m.selectedLevel.sub(1).toNumber()]

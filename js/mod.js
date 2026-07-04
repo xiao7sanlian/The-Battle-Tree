@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.0.1",
-	name: "Level 36",
+	num: "1.1.0",
+	name: "Level 40",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
@@ -26,7 +26,10 @@ let changelog = `<h1>Changelog:</h1><br>
 		- 完成前35关，增加了技能升级与里程碑<br>
 		- 内置vue.js<br>
 		<h3>v1.0.1 2026/6/27</h3><br>
-		- 完成前36关，实现了所有技能升级的额外效果<br>`
+		- 完成前36关，实现了所有技能升级的额外效果<br>
+	<h3>v1.1.0 2026/7/?</h3><br>
+		- 完成前40关<br>
+		- 下个版本要搞一个在屏幕随机位置出现的敌人，不知道该怎么做了，请大家提供建议`
 
 let winText = `恭喜！你 >暂时< 通关了！`
 
@@ -172,6 +175,10 @@ function TWskill(id){
 		TWhpLine(0.1)
 		if(Math.random() < 0.5) makeParticles(Gear, 5)
 		}
+		if(id.eq(9)) {
+		TWPoison(0.75,2)
+		TWaddATK(0.5,5)
+		}
 	}
 
 //Timewall Common Skill
@@ -196,7 +203,7 @@ function TWBPcheck(){
 }
 
 function TWPoison(chance,round){
-	if(Math.random()> 1-chance) {player.m.TWPoison=player.m.TWPoison.add(round)
+	if(Math.random()> 1-chance) {player.m.currentPoiBuff=player.m.currentPoiBuff.add(round)
 	player.m.TWtext=player.m.TWtext+'时间墙给你施加了'+format(round,0)+'回合的剧毒效果！<br>'}
 }
 
@@ -214,7 +221,13 @@ function TWhpLine(percent){
 	player.m.TWtext=player.m.TWtext+'时间墙使用了斩杀技能，将你斩杀了！<br>'}
 }
 
-function chance(n){
+function TWaddATK(chance,ATK){
+	if(prob(chance)) {player.m.TWatk=player.m.TWatk.add(ATK)
+		player.m.TWtext=player.m.TWtext+'时间墙增加了'+format(ATK)+'点攻击力！<br>'
+	}
+}
+
+function prob(n){
 	return Math.random()<n
 }
 
@@ -236,5 +249,20 @@ const Gear = {//齿轮出现时扣除你的100普通点数，被点击后恢复
     y: Math.random() * (window.innerHeight - 100) + 50,
 	onDelete(){player.m.BasicPoint=player.m.BasicPoint.sub(100)},//onStart
 	onClick(){player.m.BasicPoint=player.m.BasicPoint.add(100)
+		Vue.delete(particles, this.id)},
+}
+
+const Regular = {
+    image:"Emenies/regular.png",
+    spread: 0,
+    gravity: 0,
+    time: 9999,
+	x: Math.random() * (window.innerWidth - 100) + 50,
+    y: Math.random() * (window.innerHeight - 100) + 50,
+	text(){return '1'},
+    speed() { // Randomize speed a bit
+        return 0
+    },
+	onClick(){
 		Vue.delete(particles, this.id)},
 }
