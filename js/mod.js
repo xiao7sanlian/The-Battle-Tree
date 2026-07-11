@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.1.0",
-	name: "Level 40",
+	num: "1.2.0",
+	name: "Level 55",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
@@ -29,7 +29,10 @@ let changelog = `<h1>Changelog:</h1><br>
 		- 完成前36关，实现了所有技能升级的额外效果<br>
 	<h3>v1.1.0 2026/7/4</h3><br>
 		- 完成前40关<br>
-		- 下个版本要搞一个在屏幕随机位置出现的敌人，不知道该怎么做了，请大家提供建议`
+		- 下个版本要搞一个在屏幕随机位置出现的敌人，不知道该怎么做了，请大家提供建议<br>
+	<h3>v1.2.0 2026/7/10~2026/7/11</h3><br>
+		- 完成前55关，加入3种敌人<br>
+		- 加入章节系统<br>`
 
 let winText = `恭喜！你 >暂时< 通关了！`
 
@@ -116,6 +119,22 @@ function AnyOperation(){
 		player.m.BasicPoint=player.m.BasicPoint.add(player.m.TWbp.div(2))
 		player.m.TWbp=n(0)
 	}
+
+	if(player.m.EnemyState.length>0){
+		for (let i = 0; i < player.m.EnemyState.length; i++) {
+			if(n(player.m.EnemyState[i].HP).gt(0)) player.m.currentHP=player.m.currentHP.sub(player.m.EnemyState[i].ATK)
+			//if(n(player.m.EnemyState[i].HP).lte(0)) 
+		for (let i = player.m.EnemyState.length - 1; i >= 0; i--) {
+  			if (player.m.EnemyState[i].HP < 0) {
+				if(player.m.EnemyState[i].Type=='普通小墙') player.m.PendingPt = player.m.PendingPt.add(10)
+				if(player.m.EnemyState[i].Type=='强化小墙') player.m.PendingPt = player.m.PendingPt.add(20)
+				if(player.m.EnemyState[i].Type=='迅捷小墙') player.m.PendingPt = player.m.PendingPt.add(20)
+    			player.m.EnemyState.splice(i, 1);
+  			}
+			}//从DeepSeek那里抄来的
+		}
+	}
+
 	if(getClickableState('m',41)>0) setClickableState('m',41,getClickableState('m',41)-1)
 	player.m.currentStrBuff=player.m.currentStrBuff.add(-1).max(0)
 	if(player.m.currentHpBuff.gt(0)) {player.m.currentHpBuff=player.m.currentHpBuff.add(-1).max(0)
@@ -179,7 +198,30 @@ function TWskill(id){
 		TWPoison(0.75,2)
 		TWaddATK(0.5,5)
 		}
+		if(id.eq(10)){
+			if(divisible(player.m.RoundUsed,2)) summonEnemy('Regular',n(Math.random()*3+1).floor().toNumber(),true)
+		}
+		if(id.eq(11)){
+		summonEnemy('Strong',1,true)
+		TWPoison(0.75,2)
+		}
+		if(id.eq(12)){if(divisible(player.m.RoundUsed,5)) summonEnemy('Regular',n(Math.random()*5+1).floor().toNumber(),true)
+		TWRecover(300,0.5)
+		TWCritical(4,0.25)
+		}
+		if(id.eq(13)){TWgetBP(0.5,300,0.3)
+			TWCritical(4,0.2)
+		}
+		if(id.eq(14)){
+			player.m.TWhp=player.m.TWhp.sub(100)
+			a=['Regular','Strong','Fast']
+			summonEnemy(a[Math.floor(Math.random() * 3)],2,true)
+		}
 	}
+
+function TWpassiveSkill(id,diff){
+	if(id.eq(14))player.m.TWhp=player.m.TWhp.add(n(100).times(diff))
+}
 
 //Timewall Common Skill
 function TWSuperClick(mult,chance){
@@ -227,6 +269,14 @@ function TWaddATK(chance,ATK){
 	}
 }
 
+function TWgetBP(chance,bp,bpPercent=0){
+	if(prob(chance)){a=player.m.BasicPoint.times(bpPercent).add(bp)
+		player.m.BasicPoint=player.m.BasicPoint.sub(a)
+		player.m.TWbp=player.m.TWbp.add(a)
+		player.m.TWtext=player.m.TWtext+'时间墙使用了点数夺取技能，夺取了'+format(a)+'普通点数！<br>'
+	}
+}
+
 function prob(n){
 	return Math.random()<n
 }
@@ -252,17 +302,32 @@ const Gear = {//齿轮出现时扣除你的100普通点数，被点击后恢复
 		Vue.delete(particles, this.id)},
 }
 
-const Regular = {
-    image:"Emenies/regular.png",
-    spread: 0,
-    gravity: 0,
-    time: 9999,
-	x: Math.random() * (window.innerWidth - 100) + 50,
-    y: Math.random() * (window.innerHeight - 100) + 50,
-	text(){return '1'},
-    speed() { // Randomize speed a bit
-        return 0
-    },
-	onClick(){
-		Vue.delete(particles, this.id)},
+function summonEnemy(type,number,message=false){
+	if(type == 'Regular'){
+		for (let i = 0; i < number; i++) {
+            a=n(200).times(Math.random()).add(200).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//HP
+            b=n(5).times(Math.random()).add(10).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//ATK
+            c=n(0.25)//DEF
+			d=0//闪避率,EVA
+            player.m.EnemyState.push({Type:'普通小墙',HP:n(a),ATK:n(b),DEF:n(c),EVA:d})}
+		if(message) player.m.TWtext=player.m.TWtext+'时间墙召唤了'+format(number,0)+'个普通小墙！<br>'
+	}
+	if(type == 'Strong'){
+		for (let i = 0; i < number; i++) {
+            a=n(250).times(Math.random()).add(500).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//HP
+            b=n(15).times(Math.random()).add(15).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//ATK
+            c=n(0.4)//DEF
+			d=0//闪避率,EVA
+            player.m.EnemyState.push({Type:'强化小墙',HP:n(a),ATK:n(b),DEF:n(c),EVA:d})}
+		if(message) player.m.TWtext=player.m.TWtext+'时间墙召唤了'+format(number,0)+'个强化小墙！<br>'
+	}
+	if(type == 'Fast'){
+		for (let i = 0; i < number; i++) {
+            a=n(50).times(Math.random()).add(250).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//HP
+            b=n(20).times(Math.random()).add(40).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//ATK
+            c=n(0)//DEF
+			d=0.5//闪避率,EVA
+            player.m.EnemyState.push({Type:'迅捷小墙',HP:n(a),ATK:n(b),DEF:n(c),EVA:d})}
+		if(message) player.m.TWtext=player.m.TWtext+'时间墙召唤了'+format(number,0)+'个迅捷小墙！<br>'
+	}
 }

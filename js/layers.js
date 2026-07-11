@@ -30,12 +30,17 @@ addLayer("I", {
         ["infobox",'Timewall'],["infobox",'Skill2'],["infobox",'Shop'],["infobox",'Item1'],["infobox",'Item2'],
         ["infobox",'Lv9'],["infobox",'Item3'],["infobox",'HPLoss'],["infobox",'Item4'],["infobox",'Upg1'],
         ["infobox",'TWskill'],["infobox",'Poison'],["infobox",'Poison2'],["infobox",'RanBox'],["infobox",'Upg2'],
-        ["infobox",'Skill3'],["infobox",'Mil'],["infobox",'Skill4'],],
+        ["infobox",'Skill3'],["infobox",'Mil'],["infobox",'Skill4'],["infobox",'skillUpg'],["infobox",'Chapter'],
+        ["infobox",'Enemy'],],
     },
     "Timewall": {
         content: [ "main-display",["infobox",'2'],["infobox",'3'],["infobox",'4'],["infobox",'5'],["infobox",'6'],["infobox",'7'],
-                ["infobox",'8'],["infobox",'9'],],
+                ["infobox",'8'],["infobox",'9'],["infobox",'10'],["infobox",'11'],["infobox",'12'],["infobox",'13'],["infobox",'14'],],
         unlocked(){return player.m.points.gte(15)}
+    },
+    "Enemy": {
+        content: [ "main-display",["infobox",'Regular'],["infobox",'Strong'],["infobox",'Fast'],],
+        unlocked(){return player.m.points.gte(41)}
     },},
     infoboxes: {
     About: {
@@ -152,6 +157,18 @@ addLayer("I", {
         body() { return "在通过关卡32后，你将会解锁技能升级系统。技能升级需要一种特殊的货币——技能水晶，这种货币只能在商店中购买。技能升级与加点升级一样，都是推进游戏进度所必须的！" },
         unlocked(){return player.m.points.gte(33)}
     },
+    Chapter: {
+        title: "关于章节",
+        body() { a="本游戏有一个隐藏的章节系统，仅表现为'm'层级的颜色变化。当前章节列表：第1章--关卡1~35，第2章--关卡36~???"
+            return a
+        },
+        unlocked(){return player.m.points.gte(35)}
+    },
+    Enemy: {
+        title: "关于敌人",
+        body() { return "敌人在关卡41首次出现，也是贯穿此后绝大部分关卡的内容。一般来说，敌人的属性包括：血量、攻击力、防御力与等级。防御力以百分数表示，x%防御力意味着你对敌人造成的伤害会减少x%。等级会影响敌人的血量与攻击力，但是在目前不会出现大于1级的敌人。敌人的种类多种多样，具体种类及其特性详见'Enemies'界面。注意只有普通攻击与技能能对敌人造成伤害" },
+        unlocked(){return player.m.points.gte(41)}
+    },
     //TWskill
     2: {
         title: "Level 15 (ID:2)",
@@ -194,6 +211,47 @@ addLayer("I", {
         title: "Level 40 (ID:9)",
         body() { return "1.每回合有75%概率给你施加2回合的剧毒效果<br>2.每回合有50%概率增加5攻击力" },
         unlocked(){return player.m.points.gte(40)}
+    },
+    10: {
+        title: "Level 45 (ID:10)",
+        body() { return "每2回合召唤1~3个普通小墙" },
+        unlocked(){return player.m.points.gte(45)}
+    },
+    11: {
+        title: "Level 49 (ID:11)",
+        body() { return "1.每回合召唤1个强化小墙<br>2.每回合有75%概率给你施加2回合的剧毒效果" },
+        unlocked(){return player.m.points.gte(49)}
+    },
+    12: {
+        title: "Level 50 (ID:12)",
+        body() { return "1.每5回合召唤1~5个普通小墙<br>2.每回合有50%概率恢复300血量<br>3.每回合有25%概率使用暴击技能，造成5倍伤害" },
+        unlocked(){return player.m.points.gte(50)}
+    },
+    13: {
+        title: "Level 54 (ID:13)",
+        body() { return "1.每回合50%概率使用点数夺取技能，夺取你的50%+300普通点数<br>2.每回合有20%概率使用暴击技能，造成5倍伤害" },
+        unlocked(){return player.m.points.gte(54)}
+    },
+    14: {
+        title: "Level 55 (ID:14)",
+        body() { return "1.每秒增加100血量<br>2.每回合献祭100血量，召唤2个随机敌人(在前3种敌人中随机选择)" },
+        unlocked(){return player.m.points.gte(55)}
+    },
+    //Enemy
+    Regular:{
+        title: "普通小墙（内部名：Regular）",
+        body() { return "血量范围：200~400，攻击力范围：10~15，防御力：25%<br>无任何其他特性，击败后掉落10点数，通关后随正常奖励一并获取<br>等级对敌人血量与攻击力的影响倍数：等级<sup>0.5</sup>" },
+        unlocked(){return player.m.points.gte(41)}
+    },
+    Strong:{
+        title: "强化小墙（内部名：Strong）",
+        body() { return "血量范围：500~750，攻击力范围：15~30，防御力：40%<br>无任何其他特性，击败后掉落20点数" },
+        unlocked(){return player.m.points.gte(46)}
+    },
+    Fast:{
+        title: "快速小墙（内部名：Fast）",
+        body() { return "血量范围：250~300，攻击力范围：40~60，防御力：0%，闪避率：50%<br>闪避率：每次攻击有x%概率闪避此次伤害<br>击败后掉落20点数" },
+        unlocked(){return player.m.points.gte(51)}
     },
     }
 })
@@ -239,6 +297,9 @@ addLayer("m", {
 
         TWPoison:n(0),
 
+        EnemyState:[],
+        PendingPt:n(0),
+
         allTimer:n(0),
         TimerforPoison:n(0),
 
@@ -247,7 +308,11 @@ addLayer("m", {
 
         TWtext:'',
     }},
-    color: "#ffffff",
+    //color: "#ffffff",
+    color(){a="#ffffff"
+        if(player.m.page.gte(7)) a="#fff952"
+        return a
+    },
     requires: new Decimal(0), // Can be a function that takes requirement increases into account
     resource: "最高关卡", // Name of prestige currency
     baseResource: "金币", // Name of resource prestige is based on
@@ -284,6 +349,8 @@ addLayer("m", {
         }
         if(tmp.m.goal[player.m.currentLevel.toNumber()].DPS!==undefined&&tmp.m.ButtonCanBeSeen) player.m.currentHP=player.m.currentHP.sub(tmp.m.HPActualLoss.times(diff))
         player.m.currentHP=player.m.currentHP.min(tmp.p.maxHP)
+
+        if(player.m.TWhp.gt(0)&&tmp.m.goal[player.m.currentLevel.toNumber()].TimewallId!=undefined) TWpassiveSkill(tmp.m.goal[player.m.currentLevel.toNumber()].TimewallId,diff)
     },
     layerShown(){return true},
     passiveGeneration()
@@ -295,6 +362,7 @@ addLayer("m", {
     "MainGame": {
         content: [ "main-display",["clickables",[1,2]],["display-text", () => tmp.m.Leveltext],["clickables",[3]],
         ["display-text", () => tmp.m.InLeveltext],["clickables",[4,6,7]],["display-text", () => player.m.TWtext],["clickables",[5]],
+        ["display-text", () => tmp.m.Enemytext],
         ],
         unlocked(){return true},
     },
@@ -378,6 +446,10 @@ addLayer("m", {
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill2Limit!=undefined) player.m.SkillLim[1]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill2Limit
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill3Limit!=undefined) player.m.SkillLim[2]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill3Limit
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill4Limit!=undefined) player.m.SkillLim[3]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill4Limit
+            player.m.EnemyState=[]
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Regular!=undefined) summonEnemy('Regular',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Regular.toNumber())
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Strong!=undefined) summonEnemy('Strong',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Strong.toNumber())
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Fast!=undefined) summonEnemy('Fast',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Fast.toNumber())
         },
     },
     //In-level Basic contents(id=0)
@@ -436,11 +508,16 @@ addLayer("m", {
         title() {return "攻击"},
         display() {return "对敌人进行一次攻击，造成"+format(tmp.m.CurrentATK)+'伤害<br>仅当敌人存活时可使用'},
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(0)&&player.m.points.gte(5)},
-        canClick() {a=tmp.m.ButtonCanClick&&player.m.TWhp.gt(0)
+        canClick() {a=tmp.m.ButtonCanClick&&(player.m.TWhp.gt(0)||player.m.EnemyState.length>0)
             return a
         },
         onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK)
             if(getBuyableAmount('p',41).gte(40)&&chance(0.05)) player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(5))
+            if(player.m.EnemyState.length>0){
+		        for (let i = 0; i < player.m.EnemyState.length; i++) {
+			        if(prob(1-player.m.EnemyState[i].EVA)) player.m.EnemyState[i].HP=n(player.m.EnemyState[i].HP).sub(tmp.m.CurrentATK.times(n(1).sub(player.m.EnemyState[i].DEF)))
+		        }
+	        }
             AnyOperation()
         },
     },
@@ -491,7 +568,7 @@ addLayer("m", {
         },
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(6)},
         effect(){return getBuyableAmount('p',42).times(0.1).add(5)},
-        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&player.m.TWhp.gt(0)&&player.m.SkillLim[1].neq(0)
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&(player.m.TWhp.gt(0)||player.m.EnemyState.length>0)&&player.m.SkillLim[1].neq(0)
             return a
         },
         SPcost(){a=n(30)
@@ -504,6 +581,11 @@ addLayer("m", {
         },
         onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(clickableEffect(this.layer,this.id)))
             if((getBuyableAmount('p',42).gte(10)&&chance(0.2))||(getBuyableAmount('p',42).gte(20)&&chance(0.5))) player.m.currentHP=player.m.currentHP.add(tmp.p.maxHP.times(0.05))
+            if(player.m.EnemyState.length>0){
+		        for (let i = 0; i < player.m.EnemyState.length; i++) {
+			        if(prob(1-player.m.EnemyState[i].EVA)) player.m.EnemyState[i].HP=n(player.m.EnemyState[i].HP).sub(tmp.m.CurrentATK.times(5).times(n(1).sub(player.m.EnemyState[i].DEF)))
+		        }
+	        }
             player.points=player.points.sub(this.PTcost())
             player.m.currentSP=player.m.currentSP.sub(this.SPcost())
             player.m.SkillLim[1]=player.m.SkillLim[1].sub(1)
@@ -518,7 +600,7 @@ addLayer("m", {
         },
         unlocked() {return tmp.m.ButtonCanBeSeen&&player.m.ButtonShowId.eq(1)&&player.m.points.gte(29)},
         effect(){return n(0.2).add(getBuyableAmount('p',43).times(0.002))},
-        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&player.m.TWhp.gt(0)&&player.m.SkillLim[2].neq(0)
+        canClick() {a= tmp.m.ButtonCanClick&&player.points.gte(this.PTcost())&&player.m.currentSP.gte(this.SPcost())&&(player.m.TWhp.gt(0)||player.m.EnemyState.length>0)&&player.m.SkillLim[2].neq(0)
             return a
         },
         SPcost(){a=n(50)
@@ -531,6 +613,11 @@ addLayer("m", {
         },
         onClick() {player.m.TWhp = player.m.TWhp.times(n(1).sub(clickableEffect(this.layer,this.id)))
             if(getBuyableAmount('p',43).gte(10))player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK)
+            if(player.m.EnemyState.length>0){
+		        for (let i = 0; i < player.m.EnemyState.length; i++) {
+			        player.m.EnemyState[i].HP=n(player.m.EnemyState[i].HP).times(n(1).sub(clickableEffect(this.layer,this.id)))
+		        }
+	        }
             player.points=player.points.sub(this.PTcost())
             player.m.currentSP=player.m.currentSP.sub(this.SPcost())
             player.m.SkillLim[2]=player.m.SkillLim[2].sub(1)
@@ -692,6 +779,7 @@ addLayer("m", {
             player.m.currentHpBuff=n(0)
             player.m.currentPoiBuff=n(0)
             player.m.TWPoison=n(0)
+            player.m.PendingPt=n(0)
         },
     },
     52: {
@@ -720,7 +808,11 @@ addLayer("m", {
         //Chepter 2
         '在5回合内不使用物品获得1420.4普通点数且最多使用2次超级点击技能','在3回合内不使用物品击败时间墙且最多使用2次暴击技能','在血量流失(20)的情况下获得3500普通点数且最多使用3次超级点击技能',//36-38
         '在天降礼盒(1)的情况下1回合内获得1000普通点数且最多使用1次超级点击技能','在25回合内击败时间墙并获得2400普通点数且所有技能最多使用2次',//39~40
-        '在7回合内打败所有敌人并获得500票'
+        '在7回合内击败所有敌人并获得500普通点数','在13回合内不使用物品击败所有敌人并获得600普通点数','在血量流失(30)的情况下击败所有敌人并获得1500普通点数','在血量流失(15)的情况下击败所有敌人并获得600普通点数且最多使用1次暴击技能',//41~44
+        '在15回合内击败时间墙与所有敌人并获得1200普通点数','在11回合内击败所有敌人并获得1500普通点数且最多使用2次超级点击技能','在天降礼盒(3)的情况下不使用技能击败所有敌人','在8回合内击败所有敌人并获得750普通点数且最多使用1次超级点击与暴击技能',//45~48
+        '在毒气(3)的情况下15回合内击败时间墙与所有敌人并获得1000普通点数','在血量流失(25)与毒气(5)的情况下30回合内击败时间墙与所有敌人并获得3000普通点数且所有技能最多使用4次',//49~50
+        '在5回合内击败所有敌人并获得1普通点数','在10回合内不使用技能击败所有敌人并获得400普通点数','在血量流失(30)与毒气(5)的情况下击败所有敌人并获得3500普通点数',//51~53
+        '在血量流失(50)的情况下击败时间墙与所有敌人并获得3500普通点数','在11回合内击败时间墙与所有敌人并获得1600普通点数且所有技能最多使用3次'//54~55
     ]
         return a
     },
@@ -766,6 +858,36 @@ addLayer("m", {
         38:{BasicPoint:n(3500),DPS:n(20),Skill1Limit:n(3),Difficulty:n(3.5),},
         39:{BasicPoint:n(1000),RoundLimit:n(1),RanBox:n(1),Skill1Limit:n(1),Difficulty:n(3.9),},
         40:{BasicPoint:n(2400),RoundLimit:n(25),Skill1Limit:n(2),Skill2Limit:n(2),Skill3Limit:n(2),Skill4Limit:n(2),TimewallId:n(9),TimewallHP:n(1800),TimewallATK:n(30),TimewallBP:n(200),Difficulty:n(4.2),},
+        41:{BasicPoint:n(500),RoundLimit:n(7),Difficulty:n(2.1),
+            Enemies:{Regular:n(6),},EnemyLevel:n(1),},
+        42:{BasicPoint:n(600),RoundLimit:n(13),noItem:true,Difficulty:n(2.4),
+            Enemies:{Regular:n(3),},EnemyLevel:n(1),},
+        43:{BasicPoint:n(1500),DPS:n(30),Difficulty:n(2.3),
+            Enemies:{Regular:n(5),},EnemyLevel:n(1),},
+        44:{BasicPoint:n(600),DPS:n(15),Skill2Limit:n(1),Difficulty:n(2.6),
+            Enemies:{Regular:n(4),},EnemyLevel:n(1),},
+        45:{BasicPoint:n(1200),RoundLimit:n(15),TimewallId:n(10),TimewallHP:n(2026),TimewallATK:n(50),TimewallBP:n(300),Difficulty:n(4.1),
+            Enemies:{Regular:n(3),},EnemyLevel:n(1),},
+        46:{BasicPoint:n(1500),RoundLimit:n(11),Skill1Limit:n(2),Difficulty:n(2.2),
+            Enemies:{Regular:n(3),Strong:n(2),},EnemyLevel:n(1),},
+        47:{noSkill:true,RanBox:n(3),Difficulty:n(3.6),
+            Enemies:{Regular:n(4),Strong:n(3),},EnemyLevel:n(1),},
+        48:{BasicPoint:n(750),RoundLimit:n(8),Skill1Limit:n(1),Skill2Limit:n(1),Difficulty:n(3.8),
+            Enemies:{Strong:n(3),},EnemyLevel:n(1),},
+        49:{BasicPoint:n(1000),RoundLimit:n(12),PoiTime:n(3),TimewallId:n(11),TimewallHP:n(1500),TimewallATK:n(40),TimewallBP:n(200),Difficulty:n(4.2),
+            Enemies:{Strong:n(1)},EnemyLevel:n(1),},
+        50:{BasicPoint:n(3000),RoundLimit:n(30),DPS:n(25),PoiTime:n(5),Skill1Limit:n(4),Skill2Limit:n(4),Skill3Limit:n(4),Skill4Limit:n(4),TimewallId:n(12),TimewallHP:n(3200),TimewallATK:n(20),TimewallBP:n(100),Difficulty:n(4.4),
+            Enemies:{Regular:n(3)},EnemyLevel:n(1),},
+        51:{BasicPoint:n(1),RoundLimit:n(5),Difficulty:n(2.3),
+            Enemies:{Fast:n(4),},EnemyLevel:n(1),},
+        52:{BasicPoint:n(400),RoundLimit:n(10),noSkill:true,Difficulty:n(2.8),
+            Enemies:{Regular:n(3),Fast:n(1),},EnemyLevel:n(1),},
+        53:{BasicPoint:n(3500),DPS:n(20),PoiTime:n(5),Difficulty:n(3.7),
+            Enemies:{Regular:n(2),Strong:n(2),Fast:n(2),},EnemyLevel:n(1),},
+        54:{BasicPoint:n(3500),DPS:n(50),TimewallId:n(13),TimewallHP:n(2233),TimewallATK:n(50),TimewallBP:n(500),Difficulty:n(4.1),
+            Enemies:{Regular:n(1),Strong:n(1),Fast:n(1),},EnemyLevel:n(1),},
+        55:{BasicPoint:n(1500),RoundLimit:n(11),Skill1Limit:n(3),Skill2Limit:n(3),Skill3Limit:n(3),Skill4Limit:n(3),TimewallId:n(14),TimewallHP:n(2000),TimewallATK:n(0),TimewallBP:n(0),Difficulty:n(3.9),
+            Enemies:{Regular:n(1),Strong:n(1),Fast:n(1),},EnemyLevel:n(1),},
     },
     Leveltext(){a='<br>当前选择关卡：Level '+format(player.m.selectedLevel,0)
         a=a+"<br>目标："+tmp.m.goaldescription[player.m.selectedLevel.sub(1).toNumber()]
@@ -798,10 +920,23 @@ addLayer("m", {
         a=a+'<br>关卡进行时间：'+format(player.m.allTimer,3)+'s'
         if(!tmp.m.LevelSucceed) a=a+'<br>操作剩余冷却时间：'+format(player.m.TimeToNext,3)+'s/'+format(0.5,3)+'s<br>'
         if(tmp.m.LevelFailed&&!tmp.m.LevelSucceed) a=a+'<br>关卡失败了！再接再厉，继续努力吧！'
-        if(tmp.m.LevelSucceed) {a=a+'<br>关卡胜利了！基于你的普通点数，你将获得'+format(tmp.m.LevelReward)+'点数'
-            if(player.m.points.gte(14)) a=a+'<br>基于你的剩余血量，你将获得'+format(tmp.m.LevelReward2)+'防御点数'
+        if(tmp.m.LevelSucceed) {a=a+'<br>关卡胜利了！基于你的普通点数'
+            if(player.m.points.gte(41)) a=a+'与杀敌数量'
+            a=a+'，你将获得'+format(tmp.m.LevelReward)+'点数'
+            if(player.m.points.gte(14)) a=a+'<br>基于你的剩余血量与本关奖励，你将获得'+format(tmp.m.LevelReward2)+'防御点数'
             if(player.m.points.gte(26)) a=a+'<br>基于你的普通点数，你将获得'+format(tmp.m.LevelReward3)+'点击点数'
         }
+        return a
+    },
+    Enemytext(){if(player.m.currentLevel.eq(0)||player.m.EnemyState.length==0) return ''
+        a= ''
+        if(player.m.EnemyState!=[]) {a='敌人列表：'
+        for (let i = 0; i < player.m.EnemyState.length; i++) {
+            a=a+'<br>编号:'+format(n(i),0)+',种类:'+player.m.EnemyState[i].Type+',等级:'+format(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel,0)+',血量:'+format(player.m.EnemyState[i].HP)+',攻击力:'+format(player.m.EnemyState[i].ATK)
+            if(n(player.m.EnemyState[i].DEF).gt(0))a=a+',防御力:'+format(n(player.m.EnemyState[i].DEF).times(100))+'%'
+            if(player.m.EnemyState[i].EVA>0) a=a+',闪避率:'+format(n(player.m.EnemyState[i].EVA).times(100))+'%'
+        }}
+        //a=a+'<br>'+player.m.EnemyState
         return a
     },
     ButtonCanBeSeen(){return player.m.currentLevel.neq(0)&&!tmp.m.LevelSucceed&&!tmp.m.LevelFailed},
@@ -813,6 +948,7 @@ addLayer("m", {
     LevelSucceed(){if(player.m.currentLevel.eq(0)) return false
         a=player.m.BasicPoint.gte(tmp.m.goal[player.m.currentLevel.toNumber()].BasicPoint)//BP要求
         a=a&&player.m.TWhp.lte(0)//TW要求
+        a=a&&player.m.EnemyState.length == 0//敌人要求
         return a
     },
     LevelFailed(){if(player.m.currentLevel.eq(0)) return false
@@ -821,7 +957,7 @@ addLayer("m", {
         a=a||player.m.currentHP.lte(0)//HP要求
         return a
     },
-    LevelReward(){a=player.m.BasicPoint.div(10).add(player.m.currentLevel.times(10))//Pt
+    LevelReward(){a=player.m.BasicPoint.div(10).add(player.m.currentLevel.times(10)).add(player.m.PendingPt)//Pt
         return a
     },
     LevelReward2(){a=player.m.currentHP.max(0).div(tmp.p.maxHP).times(10).times(tmp.m.LevelReward)//DeP
@@ -1011,19 +1147,22 @@ addLayer("p", {
         }
     },
     23: {
-        title() {return "技能水晶(15个)"},
+        title() {return "技能水晶("+format(this.effect(),0)+"个)"},
         cost(x){a= n(500)
             if(hasMilestone('p',1)) a= n(450)
             return a
         },
-        display() {a= "获得15个技能水晶"
+        effect(){a= n(15)
+            if(hasMilestone('p',1)) a= n(45)
+            return a},
+        display() {a= "获得"+this.effect()+"个技能水晶"
             a=a+'<br>花费：'+format(this.cost())+'点数'
             return a
         },
         unlocked() {return player.m.points.gte(33)},
         canAfford(){return player.points.gte(this.cost())&&player.m.currentLevel.eq(0)},
         buy(){player.points=player.points.sub(this.cost())
-            player.p.skillCrystal=player.p.skillCrystal.add(15)
+            player.p.skillCrystal=player.p.skillCrystal.add(this.effect())
         },
     },
     //Upg tab
@@ -1121,7 +1260,7 @@ addLayer("p", {
             a=a+'<br>此技能到达10级：暴击后有20%的概率恢复自身5%最大血量'
             a=a+'<br>此技能到达20级：暴击恢复血量的概率提升至50%'
             a=a+'<br>此技能到达30级：暴击消耗的技能点与点数-5'
-            a=a+'<br>此技能到达40级：普通攻击时有5%概率触发一次倍率为5的暴击'
+            a=a+'<br>此技能到达40级：普通攻击时有5%概率触发一次倍率为5的暴击（仅对时间墙生效）'
             a=a+'<br>花费：'+format(this.cost())+'技能水晶'
             return a
         },
@@ -1138,9 +1277,9 @@ addLayer("p", {
             return a
         },
         display() {a= "每次升级使偷袭倍率+0.2%<br>当前："+format(clickableEffect('m',63).times(100),1)+'%'
-            a=a+'<br>此技能到达10级：偷袭时额外进行一次普通攻击'
-            a=a+'<br>此技能到达20级：每5回合自动进行一次倍率为5%的偷袭'
-            a=a+'<br>此技能到达30级：偷袭消耗的技能点-10，,点数-25'
+            a=a+'<br>此技能到达10级：偷袭时额外进行一次普通攻击（仅对时间墙生效）'
+            a=a+'<br>此技能到达20级：每5回合自动进行一次倍率为5%的偷袭（仅对时间墙生效）'
+            a=a+'<br>此技能到达30级：偷袭消耗的技能点-10，点数-25'
             a=a+'<br>此技能到达40级：此技能20级效果的倍率提升至10%'
             a=a+'<br>花费：'+format(this.cost())+'技能水晶'
             return a
@@ -1177,13 +1316,25 @@ addLayer("p", {
     0: {
         requirementDescription: "通过关卡30",
         effectDescription: "减少升级所需要的点数花费",
-        done() { return player.m.points.gt(30) }
+        done() { return player.m.points.gt(30) },
     },
     1: {
         requirementDescription: "通过关卡35",
         effectDescription: "技能水晶价格小幅降低",
         done() { return player.m.points.gt(35) },
         unlocked() { return hasMilestone('p',0)},
+    },
+    2: {
+        requirementDescription: "通过关卡45",
+        effectDescription: "技能水晶获取量x3",
+        done() { return player.m.points.gt(45) },
+        unlocked() { return hasMilestone('p',1)},
+    },
+    3: {
+        requirementDescription: "通过关卡50",
+        effectDescription: "再次减少升级所需要的点数花费",
+        done() { return player.m.points.gt(50) },
+        unlocked() { return hasMilestone('p',2)},
     },
     },
     Playertext(){a='玩家信息：<br>等级：'+format(player.p.points,0)
@@ -1204,6 +1355,7 @@ addLayer("p", {
     },
     ptRequired(){b=n(200)
         if(hasMilestone('p',0)) b=n(180)
+        if(hasMilestone('p',3)) b=n(100)
         a=player.p.points.times(b).add(-100)
         return a
     },
