@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.2.0",
-	name: "Level 55",
+	num: "1.3.0",
+	name: "Level 70",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
@@ -32,7 +32,9 @@ let changelog = `<h1>Changelog:</h1><br>
 		- 下个版本要搞一个在屏幕随机位置出现的敌人，不知道该怎么做了，请大家提供建议<br>
 	<h3>v1.2.0 2026/7/10~2026/7/11</h3><br>
 		- 完成前55关，加入3种敌人<br>
-		- 加入章节系统<br>`
+		- 加入章节系统<br>
+	<h3>v1.3.0 2026/7/19~2026/7/20</h3><br>
+		- 完成前70关，又加入3种敌人<br>`
 
 let winText = `恭喜！你 >暂时< 通关了！`
 
@@ -61,6 +63,8 @@ function getPointGen() {
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
 	devSpeed: n(1),
+	MineNum:n(0),
+	dt:n(0),
 }}
 
 // Display extra things at the top of the page
@@ -122,13 +126,26 @@ function AnyOperation(){
 
 	if(player.m.EnemyState.length>0){
 		for (let i = 0; i < player.m.EnemyState.length; i++) {
-			if(n(player.m.EnemyState[i].HP).gt(0)) player.m.currentHP=player.m.currentHP.sub(player.m.EnemyState[i].ATK)
+			if(n(player.m.EnemyState[i].HP).gt(0)) {player.m.currentHP=player.m.currentHP.sub(player.m.EnemyState[i].ATK)
+				if(player.m.EnemyState[i].Type=='药水小墙'){a=Math.floor(Math.random()*10)
+				if(a==0) player.m.EnemyState[i].HP = n(player.m.EnemyState[i].HP).add(n(200).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5)))
+				if(a==1) player.m.currentPoiBuff = player.m.currentPoiBuff.add(3)
+				if(a==2) player.m.currentWeakBuff = player.m.currentWeakBuff.add(3)
+				if(a==3) player.m.currentHP=player.m.currentHP.sub(n(150).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5)))
+				if(a==4) player.m.currentSP=player.m.currentSP.sub(50)
+			}
+			}
 			//if(n(player.m.EnemyState[i].HP).lte(0)) 
 		for (let i = player.m.EnemyState.length - 1; i >= 0; i--) {
   			if (player.m.EnemyState[i].HP < 0) {
 				if(player.m.EnemyState[i].Type=='普通小墙') player.m.PendingPt = player.m.PendingPt.add(10)
 				if(player.m.EnemyState[i].Type=='强化小墙') player.m.PendingPt = player.m.PendingPt.add(20)
 				if(player.m.EnemyState[i].Type=='迅捷小墙') player.m.PendingPt = player.m.PendingPt.add(20)
+				if(player.m.EnemyState[i].Type=='装甲小墙') player.m.PendingPt = player.m.PendingPt.add(30)
+				if(player.m.EnemyState[i].Type=='地雷小墙') {player.m.PendingPt = player.m.PendingPt.add(30)
+					player.MineNum=player.MineNum.sub(1)
+				}
+				if(player.m.EnemyState[i].Type=='药水小墙') player.m.PendingPt = player.m.PendingPt.add(50)
     			player.m.EnemyState.splice(i, 1);
   			}
 			}//从DeepSeek那里抄来的
@@ -137,6 +154,7 @@ function AnyOperation(){
 
 	if(getClickableState('m',41)>0) setClickableState('m',41,getClickableState('m',41)-1)
 	player.m.currentStrBuff=player.m.currentStrBuff.add(-1).max(0)
+	player.m.currentWeakBuff=player.m.currentWeakBuff.add(-1).max(0)
 	if(player.m.currentHpBuff.gt(0)) {player.m.currentHpBuff=player.m.currentHpBuff.add(-1).max(0)
 		player.m.currentHP=player.m.currentHP.add(tmp.p.maxHP.times(0.2))
 	}
@@ -217,6 +235,22 @@ function TWskill(id){
 			a=['Regular','Strong','Fast']
 			summonEnemy(a[Math.floor(Math.random() * 3)],2,true)
 		}
+		if(id.eq(15)){
+			if(divisible(player.m.RoundUsed,2)) summonEnemy('Regular',Math.floor(Math.random() * 3 + 1),true)
+			if(divisible(player.m.RoundUsed,3)) summonEnemy('Strong',Math.floor(Math.random() * 3 + 1),true)
+			if(divisible(player.m.RoundUsed,5)) summonEnemy('Armed',Math.floor(Math.random() * 3 + 1),true)
+		}
+		if(id.eq(16)){
+			TWRecover(200,1)
+			if(player.m.TWbp.sub(player.m.BasicPoint).gte(1000)) TWSuperClick(4,0.25)
+			if(player.m.TWhp.lt(1500)) summonEnemy('Regular',Math.floor(Math.random() * 3 + 3),true)
+			TWBPcheck()
+		}
+		if(id.eq(17)){
+			player.m.TWhp=player.m.TWhp.sub(1500)
+			a=['Regular','Strong','Fast','Armed','Mine']
+			summonEnemy(a[Math.floor(Math.random() * 5)],Math.floor(Math.random() * 2+1),true)
+		}
 	}
 
 function TWpassiveSkill(id,diff){
@@ -295,8 +329,8 @@ const Gear = {//齿轮出现时扣除你的100普通点数，被点击后恢复
 	speed:5,
 	Timer:0,
 	color:"#ff0000",
-	x: Math.random() * (window.innerWidth - 100) + 50,
-    y: Math.random() * (window.innerHeight - 100) + 50,
+	x() {return Math.random() * (window.innerWidth - 100) + 50},
+    y() {return Math.random() * (window.innerHeight - 100) + 50},
 	onDelete(){player.m.BasicPoint=player.m.BasicPoint.sub(100)},//onStart
 	onClick(){player.m.BasicPoint=player.m.BasicPoint.add(100)
 		Vue.delete(particles, this.id)},
@@ -330,4 +364,55 @@ function summonEnemy(type,number,message=false){
             player.m.EnemyState.push({Type:'迅捷小墙',HP:n(a),ATK:n(b),DEF:n(c),EVA:d})}
 		if(message) player.m.TWtext=player.m.TWtext+'时间墙召唤了'+format(number,0)+'个迅捷小墙！<br>'
 	}
+	if(type == 'Armed'){
+		for (let i = 0; i < number; i++) {
+            a=n(200).times(Math.random()).add(400).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//HP
+            b=n(10).times(Math.random()).add(10).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//ATK
+            c=n(0.75)//DEF
+			d=0//闪避率,EVA
+            player.m.EnemyState.push({Type:'装甲小墙',HP:n(a),ATK:n(b),DEF:n(c),EVA:d})}
+		if(message) player.m.TWtext=player.m.TWtext+'时间墙召唤了'+format(number,0)+'个装甲小墙！<br>'
+	}
+	if(type == 'Mine'){
+		for (let i = 0; i < number; i++) {
+            a=n(200).times(Math.random()).add(800).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//HP
+            b=n(40).times(Math.random()).add(40).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//ATK
+            c=n(0)//DEF
+			d=0//闪避率,EVA
+            player.m.EnemyState.push({Type:'地雷小墙',HP:n(a),ATK:n(b),DEF:n(c),EVA:d})}
+			player.MineNum = player.MineNum.add(number)
+		if(message) player.m.TWtext=player.m.TWtext+'时间墙召唤了'+format(number,0)+'个地雷小墙！<br>'
+	}
+	if(type == 'Potion'){
+		for (let i = 0; i < number; i++) {
+            a=n(200).times(Math.random()).add(500).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//HP
+            b=n(0).times(Math.random()).add(0).times(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel.pow(0.5))//ATK
+            c=n(0.5)//DEF
+			d=0.25//闪避率,EVA
+            player.m.EnemyState.push({Type:'药水小墙',HP:n(a),ATK:n(b),DEF:n(c),EVA:d})}
+		if(message) player.m.TWtext=player.m.TWtext+'时间墙召唤了'+format(number,0)+'个药水小墙！<br>'
+	}
+}
+
+const Mine = {//地雷，鼠标放上去没事，离开后普通点数-100，血量-100
+    image:"remove.png",
+	angle:0,
+    spread: 72,
+    gravity: 0,
+	offset:0,
+    time: 3,
+	width: 65,
+    height: 65,
+	speed:0,
+	Timer:0,
+	fadeInTime:1,
+	color:"#dc25ec",
+	//x: Math.random() * window.innerWidth,
+    //y: Math.random() * window.innerHeight,
+	x() {return Math.random() * (window.innerWidth - 100) + 50},
+    y() {return Math.random() * (window.innerHeight - 100) + 50},
+	onMouseLeave(){player.m.BasicPoint=player.m.BasicPoint.sub(100)
+		player.m.currentHP=player.m.currentHP.sub(100)
+		Vue.delete(particles, this.id)},
+	onClick: function() {},
 }

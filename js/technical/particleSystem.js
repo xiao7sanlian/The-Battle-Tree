@@ -12,6 +12,7 @@ function makeParticles(data, amount=1, type = "normal") {
                 case 'onClick': // Functions that should be copied over
                 case 'onMouseEnter':
                 case 'onMouseLeave':
+                case 'onMouseOut':
                 case 'update':
                     particle[thing] = data[thing]
                     break;

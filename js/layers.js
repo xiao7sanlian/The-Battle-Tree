@@ -35,11 +35,12 @@ addLayer("I", {
     },
     "Timewall": {
         content: [ "main-display",["infobox",'2'],["infobox",'3'],["infobox",'4'],["infobox",'5'],["infobox",'6'],["infobox",'7'],
-                ["infobox",'8'],["infobox",'9'],["infobox",'10'],["infobox",'11'],["infobox",'12'],["infobox",'13'],["infobox",'14'],],
+                ["infobox",'8'],["infobox",'9'],["infobox",'10'],["infobox",'11'],["infobox",'12'],["infobox",'13'],["infobox",'14'],
+                ["infobox",'15'],["infobox",'16'],["infobox",'17'],],
         unlocked(){return player.m.points.gte(15)}
     },
     "Enemy": {
-        content: [ "main-display",["infobox",'Regular'],["infobox",'Strong'],["infobox",'Fast'],],
+        content: [ "main-display",["infobox",'Regular'],["infobox",'Strong'],["infobox",'Fast'],["infobox",'Armed'],["infobox",'Mine'],["infobox",'Potion'],],
         unlocked(){return player.m.points.gte(41)}
     },},
     infoboxes: {
@@ -237,6 +238,21 @@ addLayer("I", {
         body() { return "1.每秒增加100血量<br>2.每回合献祭100血量，召唤2个随机敌人(在前3种敌人中随机选择)" },
         unlocked(){return player.m.points.gte(55)}
     },
+    15: {
+        title: "Level 59 (ID:15)",
+        body() { return "1.每2回合召唤1~3个普通小墙<br>2.每3回合召唤1~3个强化小墙<br>3.每5回合召唤1~3个装甲小墙" },
+        unlocked(){return player.m.points.gte(59)}
+    },
+    16: {
+        title: "Level 60 (ID:16)",
+        body() { return "1.每回合恢复200血量<br>2.当时间墙普通点数比你的普通点数少至少1000时，25%概率使用超级点击技能，获得5倍的普通点数<br>3.当血量小于1500时，每回合召唤3~5个普通小墙<br>4.当你的普通点数小于时间墙的时，你将直接被秒杀" },
+        unlocked(){return player.m.points.gte(60)}
+    },
+    17: {
+        title: "Level 65 (ID:17)",
+        body() { return "每回合献祭1500血量，召唤1~3个随机敌人(在前5种敌人中随机选择)" },
+        unlocked(){return player.m.points.gte(65)}
+    },
     //Enemy
     Regular:{
         title: "普通小墙（内部名：Regular）",
@@ -252,6 +268,21 @@ addLayer("I", {
         title: "快速小墙（内部名：Fast）",
         body() { return "血量范围：250~300，攻击力范围：40~60，防御力：0%，闪避率：50%<br>闪避率：每次攻击有x%概率闪避此次伤害<br>击败后掉落20点数" },
         unlocked(){return player.m.points.gte(51)}
+    },
+    Armed:{
+        title: "装甲小墙（内部名：Armed）",
+        body() { return "血量范围：400~600，攻击力范围：10~20，防御力：75%<br>无任何其他特性，击败后掉落30点数" },
+        unlocked(){return player.m.points.gte(56)}
+    },
+    Mine:{
+        title: "地雷小墙（内部名：Mine）",
+        body() { return "血量范围：800~1000，攻击力范围：40~80，防御力：0%<br>每秒在屏幕上生成(5*地雷小墙数量)个地雷，鼠标移出地雷时扣除100普通点数与100血量<br>击败后掉落30点数" },
+        unlocked(){return player.m.points.gte(61)}
+    },
+    Potion:{
+        title: "药水小墙（内部名：Potion）",
+        body() { return "血量范围：500~700，攻击力：0，防御力：50%，闪避率：25%<br>每回合50%概率使用一次药水，随机造成以下效果中的一种：<br>自身恢复200血量（受等级影响）；给你造成3回合的剧毒buff；给你造成3回合的虚弱buff；对你造成150伤害（受等级影响）；使你的技能点-50<br>击败后掉落50点数" },
+        unlocked(){return player.m.points.gte(66)}
     },
     }
 })
@@ -290,6 +321,8 @@ addLayer("m", {
         currentHpBuff:n(0),
         currentPoiBuff:n(0),
 
+        currentWeakBuff:n(0),
+
         TWhp:n(0),
         TWbp:n(0),
         TWbpPerRound:n(0),
@@ -299,6 +332,7 @@ addLayer("m", {
 
         EnemyState:[],
         PendingPt:n(0),
+        MineCount:n(0),
 
         allTimer:n(0),
         TimerforPoison:n(0),
@@ -346,6 +380,12 @@ addLayer("m", {
                 player.m.TimerforRanBox=player.m.TimerforRanBox.sub(tmp.m.goal[player.m.currentLevel.toNumber()].RanBox)
                 player.m.FreeRanBox=player.m.FreeRanBox.add(1)
             }
+
+        player.m.MineCount=player.m.MineCount.add(player.MineNum.times(5).times(player.dt))
+        if(player.m.MineCount.gte(1)) {makeParticles(Mine, player.m.MineCount.floor().toNumber())
+            player.m.MineCount=player.m.MineCount.sub(player.m.MineCount.floor())
+        }
+
         }
         if(tmp.m.goal[player.m.currentLevel.toNumber()].DPS!==undefined&&tmp.m.ButtonCanBeSeen) player.m.currentHP=player.m.currentHP.sub(tmp.m.HPActualLoss.times(diff))
         player.m.currentHP=player.m.currentHP.min(tmp.p.maxHP)
@@ -424,6 +464,7 @@ addLayer("m", {
         unlocked() {return player.m.selectedLevel.neq(0)&&player.m.currentLevel.eq(0)},
         canClick() {return player.m.currentLevel.eq(0)},
         onClick() {player.m.currentLevel = player.m.selectedLevel
+            player.m.BasicPoint = n(0)
             player.m.currentHP = tmp.p.maxHP
             player.m.currentSP = tmp.p.maxSP
             player.m.currentRanBox = getBuyableAmount('p',11)
@@ -447,9 +488,14 @@ addLayer("m", {
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill3Limit!=undefined) player.m.SkillLim[2]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill3Limit
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Skill4Limit!=undefined) player.m.SkillLim[3]=tmp.m.goal[player.m.currentLevel.toNumber()].Skill4Limit
             player.m.EnemyState=[]
+            player.m.MineCount=n(0)
+            player.MineNum=n(0)
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Regular!=undefined) summonEnemy('Regular',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Regular.toNumber())
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Strong!=undefined) summonEnemy('Strong',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Strong.toNumber())
             if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Fast!=undefined) summonEnemy('Fast',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Fast.toNumber())
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Armed!=undefined) summonEnemy('Armed',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Armed.toNumber())
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Mine!=undefined) summonEnemy('Mine',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Mine.toNumber())
+            if(tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Potion!=undefined) summonEnemy('Potion',tmp.m.goal[player.m.currentLevel.toNumber()].Enemies.Potion.toNumber())
         },
     },
     //In-level Basic contents(id=0)
@@ -464,7 +510,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,this.id))
-            if(getBuyableAmount('p',41).gte(40)&&chance(0.05)) player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect('m',41)).times(5))
+            if(getBuyableAmount('p',41).gte(40)&&prob(0.05)) player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect('m',41)).times(5))
             setClickableState(this.layer,this.id,2)
             AnyOperation()
         },
@@ -480,7 +526,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,this.id))
-            if(getBuyableAmount('p',41).gte(40)&&chance(0.05)) player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect('m',41)).times(5))
+            if(getBuyableAmount('p',41).gte(40)&&prob(0.05)) player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect('m',41)).times(5))
             AnyOperation()
         },
     },
@@ -512,7 +558,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK)
-            if(getBuyableAmount('p',41).gte(40)&&chance(0.05)) player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(5))
+            if(getBuyableAmount('p',41).gte(40)&&prob(0.05)) player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(5))
             if(player.m.EnemyState.length>0){
 		        for (let i = 0; i < player.m.EnemyState.length; i++) {
 			        if(prob(1-player.m.EnemyState[i].EVA)) player.m.EnemyState[i].HP=n(player.m.EnemyState[i].HP).sub(tmp.m.CurrentATK.times(n(1).sub(player.m.EnemyState[i].DEF)))
@@ -553,7 +599,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.BasicPoint = player.m.BasicPoint.add(n(clickableEffect(this.layer,41)).times(clickableEffect(this.layer,this.id)))
-            if(getBuyableAmount('p',41).gte(10)&&chance(0.2)) player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,42))
+            if(getBuyableAmount('p',41).gte(10)&&prob(0.2)) player.m.BasicPoint = player.m.BasicPoint.add(clickableEffect(this.layer,42))
             player.points=player.points.sub(this.PTcost())
             player.m.currentSP=player.m.currentSP.sub(this.SPcost())
             player.m.SkillLim[0]=player.m.SkillLim[0].sub(1)
@@ -580,7 +626,7 @@ addLayer("m", {
             return a
         },
         onClick() {player.m.TWhp = player.m.TWhp.sub(tmp.m.CurrentATK.times(clickableEffect(this.layer,this.id)))
-            if((getBuyableAmount('p',42).gte(10)&&chance(0.2))||(getBuyableAmount('p',42).gte(20)&&chance(0.5))) player.m.currentHP=player.m.currentHP.add(tmp.p.maxHP.times(0.05))
+            if((getBuyableAmount('p',42).gte(10)&&prob(0.2))||(getBuyableAmount('p',42).gte(20)&&prob(0.5))) player.m.currentHP=player.m.currentHP.add(tmp.p.maxHP.times(0.05))
             if(player.m.EnemyState.length>0){
 		        for (let i = 0; i < player.m.EnemyState.length; i++) {
 			        if(prob(1-player.m.EnemyState[i].EVA)) player.m.EnemyState[i].HP=n(player.m.EnemyState[i].HP).sub(tmp.m.CurrentATK.times(5).times(n(1).sub(player.m.EnemyState[i].DEF)))
@@ -778,6 +824,7 @@ addLayer("m", {
             player.m.currentStrBuff=n(0)
             player.m.currentHpBuff=n(0)
             player.m.currentPoiBuff=n(0)
+            player.m.currentWeakBuff=n(0)
             player.m.TWPoison=n(0)
             player.m.PendingPt=n(0)
         },
@@ -810,9 +857,15 @@ addLayer("m", {
         '在天降礼盒(1)的情况下1回合内获得1000普通点数且最多使用1次超级点击技能','在25回合内击败时间墙并获得2400普通点数且所有技能最多使用2次',//39~40
         '在7回合内击败所有敌人并获得500普通点数','在13回合内不使用物品击败所有敌人并获得600普通点数','在血量流失(30)的情况下击败所有敌人并获得1500普通点数','在血量流失(15)的情况下击败所有敌人并获得600普通点数且最多使用1次暴击技能',//41~44
         '在15回合内击败时间墙与所有敌人并获得1200普通点数','在11回合内击败所有敌人并获得1500普通点数且最多使用2次超级点击技能','在天降礼盒(3)的情况下不使用技能击败所有敌人','在8回合内击败所有敌人并获得750普通点数且最多使用1次超级点击与暴击技能',//45~48
-        '在毒气(3)的情况下15回合内击败时间墙与所有敌人并获得1000普通点数','在血量流失(25)与毒气(5)的情况下30回合内击败时间墙与所有敌人并获得3000普通点数且所有技能最多使用4次',//49~50
+        '在毒气(3)中15回合内击败时间墙与所有敌人并获得1000普通点数','在血量流失(25)与毒气(5)的情况下30回合内击败时间墙与所有敌人并获得3000普通点数且所有技能最多使用4次',//49~50
         '在5回合内击败所有敌人并获得1普通点数','在10回合内不使用技能击败所有敌人并获得400普通点数','在血量流失(30)与毒气(5)的情况下击败所有敌人并获得3500普通点数',//51~53
-        '在血量流失(50)的情况下击败时间墙与所有敌人并获得3500普通点数','在11回合内击败时间墙与所有敌人并获得1600普通点数且所有技能最多使用3次'//54~55
+        '在血量流失(50)的情况下击败时间墙与所有敌人并获得3500普通点数','在11回合内击败时间墙与所有敌人并获得1600普通点数且所有技能最多使用3次',//54~55
+        '在6回合内击败所有敌人并获得1200普通点数','在血量流失(30)的情况下10回合内击败所有敌人并获得1500普通点数且最多使用2次超级点击与暴击技能',//56~57
+        '在天降礼盒(2)的情况下击败所有敌人并获得3500普通点数且最多使用一次暴击技能','在16回合内击败时间墙与所有敌人并获得1600普通点数','在血量流失(50)、毒气(3)与天降礼盒(3)的情况下击败时间墙与所有敌人并获得3000普通点数',//58~60
+        '在10回合内不使用物品击败所有敌人并获得1500普通点数','在血量流失(50)的情况下击败所有敌人并获得3500普通点数且最多使用1次暴击技能','在20回合内不使用技能击败所有敌人并获得600普通点数',//61~63
+        '在血量流失(30)的情况下17回合内击败所有敌人并获得2023票且最多使用1次暴击技能','在天降礼盒(2)与毒气(2)的情况下20回合内击败时间墙与所有敌人并获得5000普通点数','在12回合内击败所有敌人并获得1600普通点数',//64~66
+        '在血量流失(40)与毒气(3)的情况下10回合内击败所有敌人并获得1普通点数','击败所有敌人并获得1600普通点数且最多使用3次超级点击与暴击技能','在血量流失(50)的情况下不使用物品击败所有敌人并获得723普通点数',//67~69
+        '在15回合内击败时间墙与所有敌人并获得2555普通点数且所有技能最多使用2次',//70
     ]
         return a
     },
@@ -888,6 +941,36 @@ addLayer("m", {
             Enemies:{Regular:n(1),Strong:n(1),Fast:n(1),},EnemyLevel:n(1),},
         55:{BasicPoint:n(1500),RoundLimit:n(11),Skill1Limit:n(3),Skill2Limit:n(3),Skill3Limit:n(3),Skill4Limit:n(3),TimewallId:n(14),TimewallHP:n(2000),TimewallATK:n(0),TimewallBP:n(0),Difficulty:n(3.9),
             Enemies:{Regular:n(1),Strong:n(1),Fast:n(1),},EnemyLevel:n(1),},
+        56:{BasicPoint:n(1200),RoundLimit:n(6),Difficulty:n(2.7),
+            Enemies:{Armed:n(3)},EnemyLevel:n(1),},
+        57:{BasicPoint:n(1500),RoundLimit:n(10),DPS:n(30),Skill1Limit:n(2),Skill2Limit:n(2),Difficulty:n(3.4),
+            Enemies:{Regular:n(5),Armed:n(1),},EnemyLevel:n(1),},
+        58:{BasicPoint:n(3500),RanBox:n(2),Skill2Limit:n(1),Difficulty:n(3.7),
+            Enemies:{Regular:n(3),Fast:n(2),Armed:n(4),},EnemyLevel:n(1),},
+        59:{BasicPoint:n(1600),RoundLimit:n(16),TimewallId:n(15),TimewallHP:n(4500),TimewallATK:n(50),TimewallBP:n(150),Difficulty:n(4.3),
+            Enemies:{Regular:n(1),Strong:n(1),Fast:n(1),Armed:n(1),},EnemyLevel:n(1),},
+        60:{BasicPoint:n(3000),DPS:n(50),PoiTime:n(3),RanBox:n(3),TimewallId:n(16),TimewallHP:n(3000),TimewallATK:n(30),TimewallBP:n(200),Difficulty:n(5.3),
+            Enemies:{Regular:n(3),Strong:n(3),},EnemyLevel:n(1),},
+        61:{BasicPoint:n(1500),RoundLimit:n(10),noItem:true,Difficulty:n(2.8),
+            Enemies:{Mine:n(1)},EnemyLevel:n(1),},
+        62:{BasicPoint:n(3500),DPS:n(50),Skill2Limit:n(1),Difficulty:n(3.3),
+            Enemies:{Strong:n(3),Mine:n(2)},EnemyLevel:n(1),},
+        63:{BasicPoint:n(600),RoundLimit:n(20),noSkill:true,Difficulty:n(3.6),
+            Enemies:{Strong:n(1),Fast:n(1),Armed:n(1),Mine:n(1)},EnemyLevel:n(1),},
+        64:{BasicPoint:n(2023),RoundLimit:n(17),DPS:n(30),Skill2Limit:n(1),Difficulty:n(3.4),
+            Enemies:{Mine:n(3)},EnemyLevel:n(1),},
+        65:{BasicPoint:n(5000),RoundLimit:n(20),PoiTime:n(2),RanBox:n(2),TimewallId:n(17),TimewallHP:n(15000),TimewallATK:n(0),TimewallBP:n(200),Difficulty:n(4.2),
+            Enemies:{},EnemyLevel:n(1),},
+        66:{BasicPoint:n(1600),RoundLimit:n(12),Difficulty:n(2.6),
+            Enemies:{Potion:n(1)},EnemyLevel:n(1),},
+        67:{BasicPoint:n(1),RoundLimit:n(10),DPS:n(40),PoiTime:n(3),Difficulty:n(3.6),
+            Enemies:{Strong:n(1),Fast:n(1),Armed:n(1),Potion:n(1),},EnemyLevel:n(1),},
+        68:{BasicPoint:n(1600),Skill1Limit:n(3),Skill2Limit:n(3),Difficulty:n(3.4),
+            Enemies:{Regular:n(2),Fast:n(2),Mine:n(1),Potion:n(1),},EnemyLevel:n(1),},
+        69:{BasicPoint:n(723),DPS:n(50),noItem:true,Difficulty:n(4.6),
+            Enemies:{Regular:n(1),Potion:n(1),},EnemyLevel:n(1),},
+        70:{BasicPoint:n(2555),RoundLimit:n(15),TimewallId:n(1),TimewallHP:n(2026),TimewallATK:n(7),TimewallBP:n(23),Difficulty:n(3.9),
+            Enemies:{Regular:n(1),Strong:n(1),Fast:n(1),Armed:n(1),Mine:n(1),Potion:n(1),},EnemyLevel:n(1),},
     },
     Leveltext(){a='<br>当前选择关卡：Level '+format(player.m.selectedLevel,0)
         a=a+"<br>目标："+tmp.m.goaldescription[player.m.selectedLevel.sub(1).toNumber()]
@@ -897,6 +980,7 @@ addLayer("m", {
     InLeveltext(){if(player.m.currentLevel.eq(0)) return ''
         a='<br>当前关卡： Level '+format(player.m.currentLevel,0)
         a=a+'<br>玩家信息：<br>普通点数：'+format(player.m.BasicPoint)
+        if(tmp.m.goal[player.m.currentLevel.toNumber()].BasicPoint!=undefined) a=a+'/'+format(tmp.m.goal[player.m.currentLevel.toNumber()].BasicPoint)
         a=a+'<br>血量：'+format(player.m.currentHP)+'/'+format(tmp.p.maxHP)
         if(player.m.currentHpBuff.gt(0)) a=a+'(生命恢复Buff：'+format(player.m.currentHpBuff,0)+')'
         if(player.m.currentPoiBuff.gt(0)) a=a+'(剧毒Buff：'+format(player.m.currentPoiBuff,0)+')'
@@ -904,6 +988,7 @@ addLayer("m", {
         a=a+'<br>技能点：'+format(player.m.currentSP)+'/'+format(tmp.p.maxSP)
         a=a+'<br>攻击力：'+format(tmp.m.CurrentATK)
         if(player.m.currentStrBuff.gt(0)) a=a+'(力量Buff：'+format(player.m.currentStrBuff,0)+')'
+        if(player.m.currentWeakBuff.gt(0)) a=a+'(虚弱Buff：'+format(player.m.currentWeakBuff,0)+')'
         a=a+'<br>'
 
         if(tmp.m.goal[player.m.currentLevel.toNumber()].TimewallId!==undefined){
@@ -932,7 +1017,8 @@ addLayer("m", {
         a= ''
         if(player.m.EnemyState!=[]) {a='敌人列表：'
         for (let i = 0; i < player.m.EnemyState.length; i++) {
-            a=a+'<br>编号:'+format(n(i),0)+',种类:'+player.m.EnemyState[i].Type+',等级:'+format(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel,0)+',血量:'+format(player.m.EnemyState[i].HP)+',攻击力:'+format(player.m.EnemyState[i].ATK)
+            a=a+'<br>编号:'+format(n(i),0)+',种类:'+player.m.EnemyState[i].Type+',等级:'+format(tmp.m.goal[player.m.currentLevel.toNumber()].EnemyLevel,0)+',血量:'+format(player.m.EnemyState[i].HP)
+            if(n(player.m.EnemyState[i].ATK).gt(0))a=a+',攻击力:'+format(player.m.EnemyState[i].ATK)
             if(n(player.m.EnemyState[i].DEF).gt(0))a=a+',防御力:'+format(n(player.m.EnemyState[i].DEF).times(100))+'%'
             if(player.m.EnemyState[i].EVA>0) a=a+',闪避率:'+format(n(player.m.EnemyState[i].EVA).times(100))+'%'
         }}
@@ -943,6 +1029,7 @@ addLayer("m", {
     ButtonCanClick(){return player.m.TimeToNext.eq(0)&&player.devSpeed.gt(0)},
     CurrentATK(){a=tmp.p.ATK
         if(player.m.currentStrBuff.gt(0)) a=a.times(3)
+        if(player.m.currentWeakBuff.gt(0)) a=a.times(0.25)
         return a
     },
     LevelSucceed(){if(player.m.currentLevel.eq(0)) return false
